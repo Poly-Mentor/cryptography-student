@@ -51,7 +51,7 @@ uint32_t Blowfish::F(uint32_t x)
     uint32_t result;
     result = S[0][xarr[0]] + S[1][xarr[1]];
     result ^= S[2][xarr[2]];
-    result ^= S[3][xarr[3]];
+    result += S[3][xarr[3]];
 
     return result;
 }
