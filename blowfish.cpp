@@ -1,9 +1,9 @@
 #include "blowfish.h"
-#include <crypto_bf_bf_pi.h>
+#include <utility> // for std::swap
 
 Blowfish::Blowfish(const uint8_t* key, size_t key_len) {
     if (key_len < 4 || key_len > 56) {
-        throw invalid_argument("Key length must be between 4 and 56 bytes");
+        throw std::invalid_argument("Key length must be between 4 and 56 bytes");
     }
     initialize(key, key_len);
 }
@@ -36,6 +36,26 @@ void Blowfish::initialize(const uint8_t* key, size_t key_len) {
         P[i] ^= data;
     }
 
+    uint32_t L = 0, R = 0;
+
+    // Encrypt the all-zero block to further initialize the P-array and S-boxes
+    for (int i = 0; i < 18; i += 2){
+
+        encryptBlock(L, R);
+        P[i] = L;
+        P[i+1] = R;
+    }
+
+    for (int i = 0; i < 4; i++){
+
+        for (int j = 0; j < 256; j += 2){
+
+                encryptBlock(L, R);
+                S[i][j] = L;
+                S[i][j+1] = R;
+        }
+    }
+
 }
 
 
@@ -60,15 +80,15 @@ uint32_t Blowfish::F(uint32_t x) {
 void Blowfish::encryptBlock(uint32_t &L, uint32_t &R) {
 
     // 16 rounds of the Feistel network
-    for (uint8_t round = 0; round < 16; round++){
+    for (int round = 0; round < 16; round++){
         L ^= P[round];
         uint32_t t = F(L);
         R ^= t;
-        swap(L, R);
+        std::swap(L, R);
     }
 
     // Undo the final swap and apply the final P-array transformations
-    swap(L, R);
+    std::swap(L, R);
     R ^= P[16];
     L ^= P[17];
 }

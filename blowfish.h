@@ -1,9 +1,8 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
-#include <cmath>
-
-using namespace std;
+#include <stdexcept>
+#include <crypto_bf_bf_pi.h>
 
 class Blowfish {
 
@@ -14,8 +13,8 @@ class Blowfish {
          */
         Blowfish(const uint8_t* key, size_t key_len);
 
-        string encrypt(const string& plaintext);
-        string decrypt(const string& ciphertext);
+        std::string encrypt(const std::string& plaintext);
+        std::string decrypt(const std::string& ciphertext);
 
     private:
 
