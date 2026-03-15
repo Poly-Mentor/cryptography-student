@@ -78,6 +78,38 @@ uint32_t Blowfish::F(uint32_t x) {
     return result;
 }
 
+std::vector<uint8_t> Blowfish::pkcs7Pad(const std::vector<uint8_t> &input) {
+
+    int blockSize = 8; // Blowfish block size in bytes
+    int paddingLength = blockSize - (input.size() % blockSize);
+    if (paddingLength == 0) {
+        paddingLength = blockSize; // If input is already a multiple of block size, add a full block of padding
+    }
+
+    // Create a new vector that includes the original data followed by the padding bytes
+    std::vector<uint8_t> output = std::vector<uint8_t>(input);
+    output.insert(output.end(), paddingLength, static_cast<uint8_t>(paddingLength));
+    
+    return output;
+}
+
+std::vector<uint8_t> Blowfish::pkcs7Unpad(const std::vector<uint8_t> &input) {
+
+    if (input.empty()) throw(std::invalid_argument("Input cannot be empty for unpadding"));
+    int padLen = input.back();
+    if (padLen <= 0 || padLen > 8) throw(std::invalid_argument("Invalid padding length"));
+
+    // Last padLen bytes should all be equal to padLen
+    for (size_t i = input.size() - padLen; i < input.size(); i++) {
+        if (input[i] != padLen) throw(std::invalid_argument("Invalid padding bytes"));
+    }
+    if (input.size() < static_cast<size_t>(padLen)) throw(std::invalid_argument("Input is too short for the specified padding length"));
+
+    std::vector<uint8_t> output(input.begin(), input.end() - padLen);
+    
+    return output;
+}
+
 void Blowfish::encryptBlock(uint32_t &L, uint32_t &R) {
 
     // 16 rounds of the Feistel network
