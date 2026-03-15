@@ -38,8 +38,8 @@ void Blowfish::initialize(const uint8_t* key, size_t key_len) {
 
 }
 
-uint32_t Blowfish::F(uint32_t x)
-{
+
+uint32_t Blowfish::F(uint32_t x) {
     // Split the 32-bit input into four 8-bit segments
     uint8_t xarr[4] = {
         x >> 24,
@@ -54,4 +54,21 @@ uint32_t Blowfish::F(uint32_t x)
     result += S[3][xarr[3]];
 
     return result;
+}
+
+
+void Blowfish::encryptBlock(uint32_t &L, uint32_t &R) {
+
+    // 16 rounds of the Feistel network
+    for (uint8_t round = 0; round < 16; round++){
+        L ^= P[round];
+        uint32_t t = F(L);
+        R ^= t;
+        swap(L, R);
+    }
+
+    // Undo the final swap and apply the final P-array transformations
+    swap(L, R);
+    R ^= P[16];
+    L ^= P[17];
 }
