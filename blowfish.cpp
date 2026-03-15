@@ -128,14 +128,15 @@ void Blowfish::encryptBlock(uint32_t &L, uint32_t &R) {
 
 void Blowfish::decryptBlock(uint32_t &L, uint32_t &R) {
 
-    R ^= P[16];
     L ^= P[17];
+    R ^= P[16];
 
-    for (int i = 15; i >= 0; i--) {
+    for (int i = 15; i >= 0; --i) {
 
         std::swap(L, R);
-        R ^= F(L);
         L ^= P[i];
+        R ^= F(L);
+        
     }
     
 }
