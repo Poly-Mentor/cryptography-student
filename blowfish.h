@@ -2,6 +2,7 @@
 #include <string>
 #include <cstdint>
 #include <stdexcept>
+#include <vector>
 #include <crypto_bf_bf_pi.h>
 
 class Blowfish {
@@ -13,8 +14,8 @@ class Blowfish {
          */
         Blowfish(const uint8_t* key, size_t key_len);
 
-        std::string encrypt(const std::string& plaintext);
-        std::string decrypt(const std::string& ciphertext);
+        std::string encryptText(const std::string& plaintext);
+        std::string decryptText(const std::string& ciphertext);
 
     private:
 
@@ -46,6 +47,9 @@ class Blowfish {
          * F-function used in the Blowfish algorithm, which takes a 32-bit input and produces a 32-bit output based on the S-boxes.
          */
         uint32_t F(uint32_t x);
+
+        static std::vector<uint32_t> splitToBlocks(const std::string &text);
+        static std::string joinBlocksToString(const std::vector<uint32_t> &blocks);
         
         // key-initialized P-array and S-boxes
         uint32_t P[18];
