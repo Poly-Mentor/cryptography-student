@@ -36,20 +36,22 @@ void Blowfish::initialize(const uint8_t* key, size_t key_len) {
         P[i] ^= data;
     }
 
-    // TODO
+}
 
-    // // Encrypt the all-zero string to further mix the P-array and S-boxes
-    // uint32_t left = 0, right = 0;
-    // for (int i = 0; i < 18; i += 2) {
-    //     encryptBlock(left, right);
-    //     P[i] = left;
-    //     P[i + 1] = right;
-    // }
-    // for (int i = 0; i < 4; i++) {
-    //     for (int j = 0; j < 256; j += 2) {
-    //         encryptBlock(left, right);
-    //         S[i][j] = left;
-    //         S[i][j + 1] = right;
-    //     }
-    // }
+uint32_t Blowfish::F(uint32_t x)
+{
+    // Split the 32-bit input into four 8-bit segments
+    uint8_t xarr[4] = {
+        x >> 24,
+        x >> 16,
+        x >> 8,
+        x
+    };
+    // Use the segments to index into the S-boxes and combine the results
+    uint32_t result;
+    result = S[0][xarr[0]] + S[1][xarr[1]];
+    result ^= S[2][xarr[2]];
+    result ^= S[3][xarr[3]];
+
+    return result;
 }
