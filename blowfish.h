@@ -1,9 +1,11 @@
-#include <iostream>
+#pragma once
 #include <string>
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
-#include <crypto_bf_bf_pi.h>
+
+
+using Block = std::pair<uint32_t, uint32_t>; // Represents a 64-bit block as two 32-bit halves (L and R)
 
 class Blowfish {
 
@@ -11,11 +13,17 @@ class Blowfish {
         /** Constructor that takes a key and its length
          * @param key The encryption key
          * @param key_len The length of the key in bytes (must be between 4 and 56 bytes)
+         * @throws std::invalid_argument if the key length is not within the valid range
          */
         Blowfish(const uint8_t* key, size_t key_len);
 
+        // Binary-oriented API
+        std::vector<uint8_t> encrypt(const std::vector<uint8_t>& plaintext);
+        std::vector<uint8_t> decrypt(const std::vector<uint8_t>& ciphertext);
+
+        // Text-oriented API
         std::string encryptText(const std::string& plaintext);
-        std::string decryptText(const std::string& ciphertext);
+        std::string decryptText(const std::vector<uint8_t>& ciphertext);
 
     private:
 
@@ -48,8 +56,40 @@ class Blowfish {
          */
         uint32_t F(uint32_t x);
 
-        static std::vector<uint32_t> splitToBlocks(const std::string &text);
-        static std::string joinBlocksToString(const std::vector<uint32_t> &blocks);
+        // Helper functions for block processing and padding
+
+        /**
+         * Splits a string into 64-bit blocks (two 32-bit halves) for encryption/decryption.
+         * @param text The input string to be split into blocks
+         * @return A vector of Block pairs representing the 64-bit blocks derived from the input string
+         */
+        static std::vector<Block> textToBlocks(const std::string &text);
+
+        static std::vector<uint8_t> blocksToBytes(const std::vector<Block> &blocks);
+
+        static std::vector<Block> bytesToBlocks(const std::vector<uint8_t> &bytes);
+
+        /**
+         * Joins a vector of 32-bit half-blocks back into a string after encryption/decryption.
+         * Used for reassembling decrypted text.
+         * @param blocks a vector of 32-bit pairs representing 64-bit blocks
+         * @return The resulting string after joining the blocks together
+         */
+        static std::string joinBlocksToString(const std::vector<Block> &blocks);
+
+        /**
+         * Applies PKCS#7 padding to a vector of bytes to ensure its length is a multiple of the block size (8 bytes for Blowfish).
+         * @param input The input vector of bytes to be padded
+         * @return A new vector of bytes with PKCS#7 padding applied
+         */
+        static std::vector<uint8_t> pkcs7Pad(const std::vector<uint8_t> &input);
+
+        /**
+         * Removes PKCS#7 padding from a vector of bytes after decryption.
+         * @param input The input vector of bytes from which padding should be removed
+         * @return A new vector of bytes with PKCS#7 padding removed
+         */
+        static std::vector<uint8_t> pkcs7Unpad(const std::vector<uint8_t> &input);
         
         // key-initialized P-array and S-boxes
         uint32_t P[18];

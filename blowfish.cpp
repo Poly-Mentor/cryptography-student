@@ -1,4 +1,5 @@
 #include "blowfish.h"
+#include <crypto_bf_bf_pi.h>
 #include <utility> // for std::swap
 
 Blowfish::Blowfish(const uint8_t* key, size_t key_len) {
@@ -60,7 +61,7 @@ void Blowfish::initialize(const uint8_t* key, size_t key_len) {
 
 
 uint32_t Blowfish::F(uint32_t x) {
-    
+
     // Split the 32-bit input into four 8-bit segments
     uint8_t xarr[4] = {
         x >> 24,
