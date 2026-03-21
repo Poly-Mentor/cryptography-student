@@ -22,7 +22,14 @@ class Blowfish {
         std::vector<uint8_t> decrypt(const std::vector<uint8_t>& ciphertext);
 
         // Text-oriented API
-        std::string encryptText(const std::string& plaintext);
+        /**
+         * Encrypts a plaintext string and returns the ciphertext as a vector of bytes.
+         */
+        std::vector<uint8_t> encryptText(const std::string& plaintext);
+
+        /**
+         * Decrypts a ciphertext represented as a vector of bytes and returns the resulting plaintext string.
+         */
         std::string decryptText(const std::vector<uint8_t>& ciphertext);
 
     private:
