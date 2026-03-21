@@ -51,9 +51,9 @@ void Blowfish::initialize(const uint8_t* key, size_t key_len) {
 
         for (int j = 0; j < 256; j += 2){
 
-                encryptBlock(L, R);
-                S[i][j] = L;
-                S[i][j+1] = R;
+            encryptBlock(L, R);
+            S[i][j] = L;
+            S[i][j+1] = R;
         }
     }
 
@@ -115,8 +115,7 @@ void Blowfish::encryptBlock(uint32_t &L, uint32_t &R) {
     // 16 rounds of the Feistel network
     for (int round = 0; round < 16; round++){
         L ^= P[round];
-        uint32_t t = F(L);
-        R ^= t;
+        R ^= F(L);
         std::swap(L, R);
     }
 
@@ -127,16 +126,15 @@ void Blowfish::encryptBlock(uint32_t &L, uint32_t &R) {
 }
 
 void Blowfish::decryptBlock(uint32_t &L, uint32_t &R) {
-
+    
     L ^= P[17];
     R ^= P[16];
 
-    for (int i = 15; i >= 0; --i) {
-
+    for (int round = 15; round >= 0; round--) {
         std::swap(L, R);
-        L ^= P[i];
-        R ^= F(L);
-        
+        L ^= F(R);
+        R ^= P[round];
     }
     
+    std::swap(L, R);
 }
