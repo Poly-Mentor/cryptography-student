@@ -94,7 +94,7 @@ class Blowfish {
          * @param blocks a vector of 32-bit pairs representing 64-bit blocks
          * @return The resulting string after joining the blocks together
          */
-        static std::string joinBlocksToString(const std::vector<Block> &blocks);
+        static std::string blocksToString(const std::vector<Block> &blocks);
 
         /**
          * Applies PKCS#7 padding to a vector of bytes to ensure its length is a multiple of the block size (8 bytes for Blowfish).

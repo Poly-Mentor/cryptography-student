@@ -78,8 +78,17 @@ uint32_t Blowfish::F(uint32_t x) {
     return result;
 }
 
-std::vector<uint8_t> Blowfish::blocksToBytes(const std::vector<Block> &blocks) {
-    
+std::vector<Block> Blowfish::textToBlocks(const std::string &text) {
+
+    std::vector<uint8_t> unpadded = std::vector<uint8_t>(text.begin(), text.end());
+    std::vector<uint8_t> padded = pkcs7Pad(unpadded);
+
+    return bytesToBlocks(padded);
+}
+
+std::vector<uint8_t> Blowfish::blocksToBytes(const std::vector<Block> &blocks)
+{
+
     std::vector<uint8_t> result;
 
     for (Block b : blocks) {
@@ -98,8 +107,7 @@ std::vector<uint8_t> Blowfish::blocksToBytes(const std::vector<Block> &blocks) {
     return result;
 }
 
-std::vector<Block> Blowfish::bytesToBlocks(const std::vector<uint8_t> &bytes)
-{
+std::vector<Block> Blowfish::bytesToBlocks(const std::vector<uint8_t> &bytes) {
 
     if (bytes.size() % 8 != 0) throw(std::invalid_argument("passed byte vector length must be a multiple of 8 for block conversion"));
     std::vector<Block> result;
@@ -125,7 +133,16 @@ std::vector<Block> Blowfish::bytesToBlocks(const std::vector<uint8_t> &bytes)
     return result;
 }
 
-std::vector<uint8_t> Blowfish::pkcs7Pad(const std::vector<uint8_t> &input) {
+std::string Blowfish::blocksToString(const std::vector<Block> &blocks) {
+
+    std::vector<uint8_t> bytes = blocksToBytes(blocks);
+    std::vector<uint8_t> unpadded = pkcs7Unpad(bytes);
+
+    return std::string(unpadded.begin(), unpadded.end());
+}
+
+std::vector<uint8_t> Blowfish::pkcs7Pad(const std::vector<uint8_t> &input)
+{
 
     int blockSize = 8; // Blowfish block size in bytes
     int paddingLength = blockSize - (input.size() % blockSize);
