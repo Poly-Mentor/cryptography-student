@@ -72,8 +72,20 @@ class Blowfish {
          */
         static std::vector<Block> textToBlocks(const std::string &text);
 
+        /**
+         * Joins a vector of 32-bit half-blocks back into a vector of bytes after encryption/decryption.
+         * Used for reassembling decrypted data.
+         * @param blocks a vector of 32-bit pairs representing 64-bit blocks
+         * @return The resulting vector of bytes after joining the blocks together
+         */
         static std::vector<uint8_t> blocksToBytes(const std::vector<Block> &blocks);
 
+        /**
+         * Splits a vector of bytes into 64-bit blocks (two 32-bit halves) for encryption/decryption.
+         * Vector must have a length that is a multiple of 8 bytes (the block size for Blowfish) - ensure to apply padding before calling this function if necessary.
+         * @param bytes The input vector of bytes to be split into blocks
+         * @return A vector of Block pairs representing the 64-bit blocks derived from the input
+         */
         static std::vector<Block> bytesToBlocks(const std::vector<uint8_t> &bytes);
 
         /**
