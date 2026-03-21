@@ -31,10 +31,30 @@ std::vector<uint8_t> Blowfish::decrypt(const std::vector<uint8_t> &ciphertext) {
     for (Block &b : blocks) {
         decryptBlock(b.first, b.second);
     }
-    
+
     std::vector<uint8_t> padded = blocksToBytes(blocks);
     
     return pkcs7Unpad(padded);
+}
+
+std::vector<uint8_t> Blowfish::encryptText(const std::string &plaintext) {
+
+    std::vector<Block> blocks = textToBlocks(plaintext);
+
+    for (Block &b : blocks)
+        encryptBlock(b.first, b.second);
+
+    return blocksToBytes(blocks);
+}
+
+std::string Blowfish::decryptText(const std::vector<uint8_t> &ciphertext) {
+
+    std::vector<Block> blocks = bytesToBlocks(ciphertext);
+
+    for (Block &b : blocks)
+        decryptBlock(b.first, b.second);
+    
+    return blocksToString(blocks);
 }
 
 void Blowfish::initialize(const uint8_t* key, size_t key_len) {
