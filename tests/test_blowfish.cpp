@@ -177,6 +177,24 @@ int main() {
         fail(std::string("textToBlocks/blocksToString roundtrip test threw unexpected exception: ") + e.what());
     }
 
+    // Test 8: encrypt/decrypt roundtrip on raw bytes and text
+    try {
+        std::vector<uint8_t> plaintext = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88};
+        auto ciphertext = bf.encrypt(plaintext);
+        auto decrypted = bf.decrypt(ciphertext);
+        if (decrypted != plaintext) fail("decrypt(encrypt(bytes)) should equal original bytes");
+
+        std::string text = "This is a test string for Blowfish encrypt/decrypt";
+        std::vector<uint8_t> textBytes(text.begin(), text.end());
+        auto textCipher = bf.encrypt(textBytes);
+        auto textDec = bf.decrypt(textCipher);
+        if (textDec != textBytes) fail("decrypt(encrypt(textBytes)) should equal original text bytes");
+
+        pass("encrypt/decrypt roundtrip");
+    } catch (const std::exception &e) {
+        fail(std::string("encrypt/decrypt roundtrip test threw unexpected exception: ") + e.what());
+    }
+
     std::cout << "ALL TESTS PASSED\n";
     return 0;
 }
