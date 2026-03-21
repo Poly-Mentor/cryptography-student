@@ -78,6 +78,32 @@ uint32_t Blowfish::F(uint32_t x) {
     return result;
 }
 
+std::vector<Block> Blowfish::bytesToBlocks(const std::vector<uint8_t> &bytes) {
+
+    if (bytes.size() % 8 != 0) throw(std::invalid_argument("passed byte vector length must be a multiple of 8 for block conversion"));
+    std::vector<Block> result;
+
+    for (size_t i = 0; i < bytes.size(); i += 8) {
+
+        Block b = {0, 0};
+
+        // Convert the first 4 bytes into the left 32-bit half (big-endian)
+        for (int j = 0; j < 4; j++) {
+            b.first |= static_cast<uint32_t>(bytes[i + j]) << ((3 - j) * 8);
+        }
+
+        // Convert the next 4 bytes into the right 32-bit half (big-endian)
+        for (int j = 0; j < 4; j++) {
+            b.second |= static_cast<uint32_t>(bytes[i + 4 + j]) << ((3 - j) * 8);
+        }
+
+        result.push_back(b);
+
+    }
+
+    return result;
+}
+
 std::vector<uint8_t> Blowfish::pkcs7Pad(const std::vector<uint8_t> &input) {
 
     int blockSize = 8; // Blowfish block size in bytes
