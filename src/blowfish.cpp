@@ -1,5 +1,5 @@
 #include "blowfish.h"
-#include <crypto_bf_bf_pi.h>
+#include "crypto_bf_bf_pi.h"
 #include <utility> // for std::swap
 
 Blowfish::Blowfish(const uint8_t* key, size_t key_len) {
