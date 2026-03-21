@@ -154,6 +154,29 @@ int main() {
         fail(std::string("blocksToBytes roundtrip test threw unexpected exception: ") + e.what());
     }
 
+    // Test 7: textToBlocks and blocksToString roundtrip
+    try {
+        std::vector<std::string> testStrings = {
+            "Hello, Blowfish! ＾_＾",
+            "",                      // empty string (padding only)
+            "12345678",              // exactly one block
+            "1234567",               // one byte short
+            "The quick brown fox jumps over the lazy dog",
+            "\n\tSpecial chars: !@#$%^&*()_+{}[]<>?",
+            "Polish: ąćęłńóśżź"
+        };
+
+        for (const auto &text : testStrings) {
+            auto blocks = bf.textToBlocks(text);
+            auto out = bf.blocksToString(blocks);
+            if (out != text) fail("blocksToString(textToBlocks(text)) should equal original string for '" + text + "'");
+        }
+
+        pass("textToBlocks/blocksToString roundtrip");
+    } catch (const std::exception &e) {
+        fail(std::string("textToBlocks/blocksToString roundtrip test threw unexpected exception: ") + e.what());
+    }
+
     std::cout << "ALL TESTS PASSED\n";
     return 0;
 }
