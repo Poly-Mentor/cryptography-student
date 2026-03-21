@@ -28,5 +28,6 @@
 *.out
 *.app
 
+.github/instructions/*
 .vscode/*
 bin/*

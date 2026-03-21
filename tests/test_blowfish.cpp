@@ -118,6 +118,27 @@ int main() {
         fail(std::string("F tests threw unexpected exception: ") + e.what());
     }
 
+    // Test 5: bytesToBlocks should split bytes into 32-bit halves in big-endian order
+    try {
+        std::vector<uint8_t> input = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77};
+        auto blocks = Blowfish::bytesToBlocks(input);
+        if (blocks.size() != 1) fail("bytesToBlocks should produce exactly 1 block for 8 bytes");
+        if (blocks[0].first != 0x00112233u || blocks[0].second != 0x44556677u) {
+            fail("bytesToBlocks output mismatch: got (" + std::to_string(blocks[0].first) + "," + std::to_string(blocks[0].second) + ") expected (0x00112233,0x44556677)");
+        }
+
+        // Multi-block check
+        input = {0xAA,0xBB,0xCC,0xDD,0x11,0x22,0x33,0x44, 0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC};
+        blocks = Blowfish::bytesToBlocks(input);
+        if (blocks.size() != 2) fail("bytesToBlocks should produce exactly 2 blocks for 16 bytes");
+        if (blocks[0].first != 0xAABBCCDDu || blocks[0].second != 0x11223344u) fail("bytesToBlocks first block mismatch");
+        if (blocks[1].first != 0x55667788u || blocks[1].second != 0x99AABBCCu) fail("bytesToBlocks second block mismatch");
+
+        pass("bytesToBlocks block splitting");
+    } catch (const std::exception &e) {
+        fail(std::string("bytesToBlocks test threw unexpected exception: ") + e.what());
+    }
+
     std::cout << "ALL TESTS PASSED\n";
     return 0;
 }
