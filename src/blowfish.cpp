@@ -9,6 +9,34 @@ Blowfish::Blowfish(const uint8_t* key, size_t key_len) {
     initialize(key, key_len);
 }
 
+std::vector<uint8_t> Blowfish::encrypt(const std::vector<uint8_t> &plaintext) {
+
+    std::vector<uint8_t> padded = pkcs7Pad(plaintext);
+    std::vector<Block> blocks = bytesToBlocks(padded);
+
+    for (Block &b : blocks) {
+        encryptBlock(b.first, b.second);
+    }
+
+    return blocksToBytes(blocks);
+}
+
+std::vector<uint8_t> Blowfish::decrypt(const std::vector<uint8_t> &ciphertext) {
+
+    if (ciphertext.size() % 8 != 0) 
+        throw std::invalid_argument("Ciphertext length must be a multiple of 8 bytes");
+
+    std::vector<Block> blocks = bytesToBlocks(ciphertext);
+
+    for (Block &b : blocks) {
+        decryptBlock(b.first, b.second);
+    }
+    
+    std::vector<uint8_t> padded = blocksToBytes(blocks);
+    
+    return pkcs7Unpad(padded);
+}
+
 void Blowfish::initialize(const uint8_t* key, size_t key_len) {
 
     // Initialize P-array and S-boxes with initial values
