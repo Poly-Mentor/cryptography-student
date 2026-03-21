@@ -139,6 +139,21 @@ int main() {
         fail(std::string("bytesToBlocks test threw unexpected exception: ") + e.what());
     }
 
+    // Test 6: blocksToBytes and bytesToBlocks roundtrip
+    try {
+        std::vector<uint8_t> original = {
+            0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
+            0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0x01,0x02
+        };
+        auto blocks = Blowfish::bytesToBlocks(original);
+        auto roundtrip = Blowfish::blocksToBytes(blocks);
+        if (roundtrip != original) fail("blocksToBytes(bytesToBlocks(x)) should equal x");
+
+        pass("blocksToBytes/bytesToBlocks roundtrip");
+    } catch (const std::exception &e) {
+        fail(std::string("blocksToBytes roundtrip test threw unexpected exception: ") + e.what());
+    }
+
     std::cout << "ALL TESTS PASSED\n";
     return 0;
 }
