@@ -215,6 +215,32 @@ int main() {
         fail(std::string("encryptText/decryptText roundtrip test threw unexpected exception: ") + e.what());
     }
 
-    std::cout << "ALL TESTS PASSED\n";
+
+
+    // Test 10: integration test
+    try {
+        // case 1
+        std::string text = "Integration test for Blowfish encryption and decryption.";
+        std::string key = "integrationkey";
+        Blowfish bf(reinterpret_cast<const uint8_t*>(key.data()), key.size());
+        auto c = bf.encryptText(text);
+        auto out = bf.decryptText(c);
+        if (out != text) fail("Integration test failed: decrypted text does not match original");
+        pass("integration test case 1");
+        
+        // case 2
+        text = "Another test with different text and key! 1234567890";
+        key = "anotherkey12345";
+        Blowfish bf2(reinterpret_cast<const uint8_t*>(key.data()), key.size());
+        auto c2 = bf2.encryptText(text);
+        auto out2 = bf2.decryptText(c2);
+        if (out2 != text) fail("Integration test failed: decrypted text does not match original for case 2");
+        pass("integration test case 2");
+
+    } catch (const std::exception &e) {
+        fail(std::string("integration test threw unexpected exception: ") + e.what());
+    }
+
+        std::cout << "ALL TESTS PASSED\n";
     return 0;
 }
