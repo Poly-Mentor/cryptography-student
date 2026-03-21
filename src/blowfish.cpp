@@ -78,7 +78,28 @@ uint32_t Blowfish::F(uint32_t x) {
     return result;
 }
 
-std::vector<Block> Blowfish::bytesToBlocks(const std::vector<uint8_t> &bytes) {
+std::vector<uint8_t> Blowfish::blocksToBytes(const std::vector<Block> &blocks) {
+    
+    std::vector<uint8_t> result;
+
+    for (Block b : blocks) {
+
+        for (int i = 0; i < 4; i++) {
+
+            result.push_back(static_cast<uint8_t>(b.first >> ((3 -i) * 8)));
+        }
+
+        for (int i = 0; i < 4; i++) {
+
+            result.push_back(static_cast<uint8_t>(b.second >> ((3 - i) * 8)));
+        }
+    }
+
+    return result;
+}
+
+std::vector<Block> Blowfish::bytesToBlocks(const std::vector<uint8_t> &bytes)
+{
 
     if (bytes.size() % 8 != 0) throw(std::invalid_argument("passed byte vector length must be a multiple of 8 for block conversion"));
     std::vector<Block> result;
