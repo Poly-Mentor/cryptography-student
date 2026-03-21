@@ -195,6 +195,26 @@ int main() {
         fail(std::string("encrypt/decrypt roundtrip test threw unexpected exception: ") + e.what());
     }
 
+    // Test 9: encryptText/decryptText roundtrip
+    try {
+        std::vector<std::string> testStrings = {
+            "Hello API",
+            "",
+            "Short",
+            "Longer text that spans multiple blocks and includes special characters ąęćłńóśżź!",
+        };
+
+        for (const auto &text : testStrings) {
+            auto c = bf.encryptText(text);
+            auto out = bf.decryptText(c);
+            if (out != text) fail("decryptText(encryptText(text)) should equal original text for '" + text + "'");
+        }
+
+        pass("encryptText/decryptText roundtrip");
+    } catch (const std::exception &e) {
+        fail(std::string("encryptText/decryptText roundtrip test threw unexpected exception: ") + e.what());
+    }
+
     std::cout << "ALL TESTS PASSED\n";
     return 0;
 }
