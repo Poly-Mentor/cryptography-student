@@ -3,16 +3,49 @@
 #include <vector>
 #include <fstream>
 #include <stdexcept>
+#include "blowfish.h"
 
+enum class CipherAlgorithm {
+    Blowfish,
+    RSA,
+    MD5
+};
 
-int main(char* argv[], int argc) {
+enum class CipherMode {
+    ENCRYPT,
+    DECRYPT
+};
 
-    using namespace std;
-    cout << "Hello World" << endl;
+void blowfishTextDemo();
 
-    // TODO: demonstrate Blowfish usage - text and file roundtrip encryption/decryption
+int main(int argc, char* argv[]) {
+
+    blowfishTextDemo();
 
     return 0;
+}
+
+void blowfishTextDemo() {
+
+    using namespace std;
+
+    string key = "testKey12345678"; // Blowfish key must be between 4 and 56 bytes
+    const string input = "Hello, World!";
+
+    cout << "Generating Blowfish cipher with key: " << key << endl;
+    Blowfish bf = Blowfish(key);
+
+    cout << "Encrypting text: " << input << endl;
+    vector<uint8_t> encryptedBytes = bf.encryptText(input);
+
+    cout << "Encrypted bytes: ";
+    for (uint8_t b : encryptedBytes) {
+        cout << hex << static_cast<int>(b) << " ";
+    }
+    cout << dec << endl;
+
+    string decryptedText = bf.decryptText(encryptedBytes);
+    cout << "Decrypted text: " << decryptedText << endl;
 }
 
 std::vector<uint8_t> loadFile(std::string filepath) {
