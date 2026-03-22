@@ -17,6 +17,13 @@ class Blowfish {
          */
         Blowfish(const std::vector<uint8_t>& key);
 
+        /**
+         * Convenience constructor that takes a string key and converts it to a vector of bytes.
+         * @param key The encryption key as a string (length must be between 4 and 56 bytes)
+         * @throws std::invalid_argument if the key length is not within the valid range
+         */
+        Blowfish(const std::string& key) : Blowfish(std::vector<uint8_t>(key.begin(), key.end())) {}
+
         // Binary-oriented API
         std::vector<uint8_t> encrypt(const std::vector<uint8_t>& plaintext);
         std::vector<uint8_t> decrypt(const std::vector<uint8_t>& ciphertext);

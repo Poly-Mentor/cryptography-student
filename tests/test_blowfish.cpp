@@ -45,8 +45,7 @@ int main() {
     }
 
     // Create a Blowfish instance for subsequent tests
-    std::vector<uint8_t> key = {'t','e','s','t','k','e','y','1'}; // 8 bytes
-    Blowfish bf(key);
+    Blowfish bf("testkey1");
 
     // Test 2: pkcs7Pad/unpad roundtrip for sizes 0,1,7,8,9 and invalid padding detection
     try {
@@ -226,9 +225,7 @@ int main() {
     try {
         // case 1
         std::string text = "Integration test for Blowfish encryption and decryption.";
-        std::string keyStr1 = "integrationkey";
-        std::vector<uint8_t> keyVec1(keyStr1.begin(), keyStr1.end());
-        Blowfish bf(keyVec1);
+        Blowfish bf("integrationkey");
         auto c = bf.encryptText(text);
         auto out = bf.decryptText(c);
         if (out != text) fail("Integration test failed: decrypted text does not match original");
@@ -236,9 +233,7 @@ int main() {
         
         // case 2
         text = "Another test with different text and key! 1234567890";
-        std::string keyStr2 = "anotherkey12345";
-        std::vector<uint8_t> keyVec2(keyStr2.begin(), keyStr2.end());
-        Blowfish bf2(keyVec2);
+        Blowfish bf2("anotherkey12345");
         auto c2 = bf2.encryptText(text);
         auto out2 = bf2.decryptText(c2);
         if (out2 != text) fail("Integration test failed: decrypted text does not match original for case 2");
