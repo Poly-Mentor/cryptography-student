@@ -1,14 +1,13 @@
 # Testy jednostkowe Blowfish
 
-Krótka instrukcja budowy i uruchomienia testów jednostkowych dodanych w `test_blowfish.cpp`.
+Krótka instrukcja budowy i uruchomienia testów jednostkowych dodanych w `tests/test_blowfish.cpp`.
 
 Wymagania
 - `g++` (kompilator C++ z obsługą C++17)
-- katalog roboczy zawierający pliki `blowfish.cpp`, `blowfish.h`, `crypto_bf_bf_pi.h` i `test_blowfish.cpp`.
+- katalog roboczy zawierający pliki `src/blowfish.cpp`, `src/blowfish.h`, `src/crypto_bf_bf_pi.h` i `tests/test_blowfish.cpp`.
 
-g++ -std=c++17 -O2 blowfish.cpp test_blowfish.cpp -I. -o bin/test_blowfish
 Kompilacja
-Utwórz katalog `bin` jeśli go nie ma, a następnie skompiluj (nowa struktura projektu używa `src/` i `test/`):
+Utwórz katalog `bin` jeśli go nie ma, a następnie skompiluj (nowa struktura projektu używa `src/` i `tests/`):
 
 ```bash
 mkdir -p bin
