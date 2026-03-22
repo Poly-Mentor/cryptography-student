@@ -2,11 +2,13 @@
 #include "crypto_bf_bf_pi.h"
 #include <utility> // for std::swap
 
-Blowfish::Blowfish(const uint8_t* key, size_t key_len) {
+Blowfish::Blowfish(const std::vector<uint8_t>& key) {
+
+    size_t key_len = key.size();
     if (key_len < 4 || key_len > 56) {
         throw std::invalid_argument("Key length must be between 4 and 56 bytes");
     }
-    initialize(key, key_len);
+    initialize(key);
 }
 
 std::vector<uint8_t> Blowfish::encrypt(const std::vector<uint8_t> &plaintext) {
@@ -57,7 +59,7 @@ std::string Blowfish::decryptText(const std::vector<uint8_t> &ciphertext) {
     return blocksToString(blocks);
 }
 
-void Blowfish::initialize(const uint8_t* key, size_t key_len) {
+void Blowfish::initialize(const std::vector<uint8_t>& key) {
 
     // Initialize P-array and S-boxes with initial values
     // those values are derived from the hexadecimal digits of pi (as per the Blowfish specification)
@@ -80,7 +82,7 @@ void Blowfish::initialize(const uint8_t* key, size_t key_len) {
             // Shift the existing data left by 8 bits and add the next byte of the key
             data = (data << 8) | key[key_index];
             // Move to the next byte of the key, wrapping around if necessary
-            key_index = (key_index + 1) % key_len;
+            key_index = (key_index + 1) % key.size();
         }
         P[i] ^= data;
     }

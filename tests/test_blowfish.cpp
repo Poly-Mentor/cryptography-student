@@ -22,26 +22,31 @@ int main() {
 
     // Test 1: constructor throws for invalid key lengths and doesn't throw for valid
     try {
-        uint8_t k0[1] = {0};
-        try { Blowfish bf(k0, 0); fail("ctor accepted key length 0"); } catch (const std::invalid_argument&) {}
-        try { Blowfish bf(k0, 1); fail("ctor accepted key length 1"); } catch (const std::invalid_argument&) {}
-        try { Blowfish bf(k0, 3); fail("ctor accepted key length 3"); } catch (const std::invalid_argument&) {}
-        uint8_t k4[4] = {0,1,2,3};
-        try { Blowfish bf(k4, 4); } catch (...) { fail("ctor rejected valid key length 4"); }
-        uint8_t k56[56];
+        std::vector<uint8_t> k0; // length 0
+        try { Blowfish bf(k0); fail("ctor accepted key length 0"); } catch (const std::invalid_argument&) {}
+        k0 = {0};
+        try { Blowfish bf(k0); fail("ctor accepted key length 1"); } catch (const std::invalid_argument&) {}
+        k0 = {0,1,2};
+        try { Blowfish bf(k0); fail("ctor accepted key length 3"); } catch (const std::invalid_argument&) {}
+
+        std::vector<uint8_t> k4 = {0,1,2,3};
+        try { Blowfish bf(k4); } catch (...) { fail("ctor rejected valid key length 4"); }
+
+        std::vector<uint8_t> k56(56);
         for (int i=0;i<56;i++) k56[i]=uint8_t(i);
-        try { Blowfish bf2(k56, 56); } catch (...) { fail("ctor rejected valid key length 56"); }
-        uint8_t k57[57];
+        try { Blowfish bf2(k56); } catch (...) { fail("ctor rejected valid key length 56"); }
+
+        std::vector<uint8_t> k57(57);
         for (int i=0;i<57;i++) k57[i]=uint8_t(i);
-        try { Blowfish bf3(k57, 57); fail("ctor accepted key length 57"); } catch (const std::invalid_argument&) {}
+        try { Blowfish bf3(k57); fail("ctor accepted key length 57"); } catch (const std::invalid_argument&) {}
         pass("constructor validation");
     } catch (const std::exception &e) {
         fail(std::string("constructor test threw unexpected exception: ") + e.what());
     }
 
     // Create a Blowfish instance for subsequent tests
-    uint8_t key[] = {'t','e','s','t','k','e','y','1'}; // 8 bytes
-    Blowfish bf(key, sizeof(key));
+    std::vector<uint8_t> key = {'t','e','s','t','k','e','y','1'}; // 8 bytes
+    Blowfish bf(key);
 
     // Test 2: pkcs7Pad/unpad roundtrip for sizes 0,1,7,8,9 and invalid padding detection
     try {
@@ -221,8 +226,9 @@ int main() {
     try {
         // case 1
         std::string text = "Integration test for Blowfish encryption and decryption.";
-        std::string key = "integrationkey";
-        Blowfish bf(reinterpret_cast<const uint8_t*>(key.data()), key.size());
+        std::string keyStr1 = "integrationkey";
+        std::vector<uint8_t> keyVec1(keyStr1.begin(), keyStr1.end());
+        Blowfish bf(keyVec1);
         auto c = bf.encryptText(text);
         auto out = bf.decryptText(c);
         if (out != text) fail("Integration test failed: decrypted text does not match original");
@@ -230,8 +236,9 @@ int main() {
         
         // case 2
         text = "Another test with different text and key! 1234567890";
-        key = "anotherkey12345";
-        Blowfish bf2(reinterpret_cast<const uint8_t*>(key.data()), key.size());
+        std::string keyStr2 = "anotherkey12345";
+        std::vector<uint8_t> keyVec2(keyStr2.begin(), keyStr2.end());
+        Blowfish bf2(keyVec2);
         auto c2 = bf2.encryptText(text);
         auto out2 = bf2.decryptText(c2);
         if (out2 != text) fail("Integration test failed: decrypted text does not match original for case 2");

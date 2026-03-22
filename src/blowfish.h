@@ -15,7 +15,7 @@ class Blowfish {
          * @param key_len The length of the key in bytes (must be between 4 and 56 bytes)
          * @throws std::invalid_argument if the key length is not within the valid range
          */
-        Blowfish(const uint8_t* key, size_t key_len);
+        Blowfish(const std::vector<uint8_t>& key);
 
         // Binary-oriented API
         std::vector<uint8_t> encrypt(const std::vector<uint8_t>& plaintext);
@@ -40,7 +40,7 @@ class Blowfish {
          * 1. Initializing the P-array and S-boxes with the hexadecimal digits of pi (as per the Blowfish specification).
          * 2. XORing the key with the P-array. The key is repeated as necessary to fill the entire P-array.
          */
-        void initialize(const uint8_t* key, size_t key_len);
+        void initialize(const std::vector<uint8_t>& key);
 
         /**
          * Encrypts a single 64-bit block of data (split into two 32-bit halves, L and R) using the Blowfish algorithm.
