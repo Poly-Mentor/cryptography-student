@@ -1,113 +1,104 @@
 # Plan implementacji — Etap A (small-int, int/long prototype)
 
-Cel: szybkie, krokowe zweryfikowanie logiki RSA przy użyciu natywnych typów całkowitych (int/long). Nie do użytku produkcyjnego — tylko walidacja algorytmów przed migracją do bignum.
+Cel: szybkie i przejrzyste zweryfikowanie logiki RSA używając wyłącznie wbudowanych typów całkowitych (`unsigned long` / `uint32_t` / `uint64_t`) w środowisku edukacyjnym.
 
 Założenia i ograniczenia
-- Typy: używamy `uint32_t` / `uint64_t` (albo `unsigned long`) w zależności od potrzeb bitowych.
-- CSPRNG: używamy systemowego źródła losowości (`std::random_device` / `/dev/urandom`) do generowania kandydatów.
-- Zakres bitów: testy na małych rozmiarach (np. 16, 32, 48 bitów) — tak by operacje mieściły się w typach.
+- Typy: `uint64_t`, by działać w standardowym C++ bez zewnętrznych bibliotek bignum.
+- CSPRNG: `std::random_device` + `std::mt19937_64` jako edukacyjny placeholder.
+  - **Uwaga**: MT-19937 nie jest cryptographically secure RNG
+  - Dla edukacji: wystarczajace, dla produkcji: /dev/urandom lub systemowy RNG
+- Zakres bitów: 16, 24, 32, maksymalnie 48/64 bitów (ze względu na overflow przy mnożeniu w `uint64_t`).
 
-Kolejność implementacji (szczegółowy plan krok-po-kroku)
+Kolejność implementacji (prosty krok-po-kroku)
 
-1) Szkielet projektu i konwencje
-- Utwórz pliki/szkielety: `src/smallint.h`, `src/smallint.cpp`, `src/rsa_small.h`, `src/rsa_small.cpp`, `tests/test_rsa_small.cpp`.
-- Przygotuj prosty build (użyj istniejącego `g++` task albo prostego `Makefile`).
+1) Szkielet projektu
+- `src/arithmetics.h`, `src/arithmetics.cpp`, `src/rsa_small.h`, `src/rsa_small.cpp`, `tests/test_arithmetics.cpp`, `tests/test_rsa_small.cpp`.
+- Prosty build przez `g++` (task z workspace). 
 
-2) `SmallIntAdapter` (interfejs dla prototypu)
-- Definicja: typ alias `using SmallInt = uint64_t;` (albo `uint32_t` dla mniejszych testów).
-- Funkcje eksportowane:
-  - `SmallInt add(SmallInt a, SmallInt b)` — opcjonalnie z detekcją overflow dla testów.
-  - `SmallInt sub(SmallInt a, SmallInt b)`
-  - `SmallInt mul(SmallInt a, SmallInt b)`
-  - `std::pair<SmallInt, SmallInt> divmod(SmallInt a, SmallInt b)`
-  - `SmallInt mod_pow(SmallInt base, SmallInt exp, SmallInt mod)`
-  - `SmallInt egcd(SmallInt a, SmallInt b, SmallInt &x, SmallInt &y)` (rozszerzony Euklides)
-  - `SmallInt mod_inv(SmallInt a, SmallInt m)`
+2) Podstawowy `uint64_t`
+- używamy bezpośrednio `uint64_t` i standardowych operatorów (+, -, *).
+- Dodatkowe funkcje pomocnicze (add/sub/mul) są opcjonalne, tylko jeśli potrzebna kontrola overflow.
+- Funkcje obowiązkowe:
+  - `std::pair<uint64_t, uint64_t> divmod(uint64_t a, uint64_t b)`
+  - `uint64_t mod_pow(uint64_t base, uint64_t exp, uint64_t mod)`
+  - `uint64_t egcd(uint64_t a, uint64_t b, uint64_t &x, uint64_t &y)`
+  - `uint64_t mod_inv(uint64_t a, uint64_t m)`
 
-3) Implementacja modular exponentiation (efektywne potęgowanie modularne)
-- Implementuj `mod_pow` używając square-and-multiply (binary exponentiation).
-- Zaimplementuj testy jednostkowe: porównanie z prostą pętlą (dla małych wykładników) oraz testy własności (a^{phi} ≡ 1 mod p dla p pierwszego, jeśli dotyczy).
+3) Modular exponentiation
+- Square-and-multiply.
+- Testy: prosta pętla vs `mod_pow`, oraz własność Fermata dla małych pierwszych.
 
-4) Extended Euclidean Algorithm i modular inverse
-- Implementuj `egcd` (iteracyjnie lub rekurencyjnie) i `mod_inv(a,m)` wykorzystując `egcd`.
-- Testy: sprawdź, że `(a * mod_inv(a,m)) % m == 1` gdy gcd==1; testy przeciwne, gdy odwrotność nie istnieje.
+4) Extended Euclid i odwrotność modularna
+- `egcd` (iteracyjnie lub rekurencyjnie), `mod_inv` na bazie `egcd`.
+- Testy: `a*inv % m == 1` gdy gcd==1 i przypadki braku odwrotności.
 
-5) Test pierwszości (Miller–Rabin) i prosta filtracja
-- Implementuj listę małych pierwszych (np. do 1000) do szybkiej filtracji kandydatów.
-- Implementuj `is_probable_prime(n, k)` (Miller–Rabin) z parametrem rund `k`.
-- Dla 32/64-bitów możesz użyć deterministycznych baz znanych dla tego zakresu (opcjonalnie) — dla Etapu A wystarczą małe, testowe podstawy.
-- Testy: wektory znanych liczb pierwszych i złożonych.
+5) Prosty test pierwszości (Miller-Rabin + filtr)
+- **Bazy testowe dla uint64_t**: {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37}
+- Lista małych dzielników do 1000 (szybki filtr)
+- `is_probable_prime(n,k)` z k=5..10 rundami Miller-Rabin
+- testy z wektorami znanych liczb pierwszych i złożonych
 
-6) Generowanie kandydatów na liczby pierwsze
-- Funkcja: `SmallInt random_odd(bits)` — generuje liczbę o podanej długości bitowej, ustawia najwyższy bit i bit parzystości (odd).
-- Stosuj filtr małych pierwszych, potem Miller–Rabin.
-- Zapewnij limit prób i właściwe logowanie (dla testów określ maks. iteracji).
+6) Generowanie liczby pierwszej
+- `random_odd(bits)`:
+  - Ustawia bit najwyzszy (index `bits-1`) = 1
+  - Ustawia bit najmniej znaczacy = 1 (liczba nieparzysta)
+  - Pozostale bity losowe
+- Kolejność: generuj liczby, filtr małych dzielników, Miller-Rabin.
+- **Limit iteracji**: max 100000 prob, jeśli nie znaleziona - exception
+- Debug output: czasu, liczby prob, liczby odrzuconych przez filtr
 
-7) Generacja klucza RSA (małe p, q)
-- Procedura:
-  - Wybierz rozmiar p i q (np. po połowie wymaganego rozmiaru n).
-  - Generuj p, q przy użyciu kroku 6; upewnij się, że `p != q` i że `abs(p-q)` nie jest zbyt małe (dla bezpieczeństwa edukacyjnego).
-  - Oblicz `n = p * q` (upewnij się, że mieści się w `SmallInt`).
-  - Oblicz `phi = (p-1)*(q-1)`.
-  - Wybierz `e` (domyślnie 65537) i sprawdź `gcd(e,phi) == 1`; jeśli nie, wybierz inne e lub regeneruj.
-  - Oblicz `d = mod_inv(e, phi)`.
-- Testy: sprawdź, że `(e * d) % phi == 1` oraz `p` i `q` rzeczywiście pierwsze.
+7) Generacja pary kluczy RSA
+- `p`, `q` po `bits/2`.
+- `n=p*q`, `phi=(p-1)*(q-1)`.
+- `e=65537` z fallback na losowe `e`:
+  - Fallback limit: max 10000 iteracji
+  - Walidacja: `gcd(e, phi) == 1`
+- `d = mod_inv(e, phi)`.
+- **Obowiązkowa walidacja**:
+  - `assert(p != q)` - p i q muszą byc rozne
+  - `assert((e * d) % phi == 1)`
+  - **Test decrypt(encrypt(m)) == m** dla kilka losowych `m < n`
 
-8) Struktura kluczy i serializacja prostego formatu
-- Zdefiniuj `struct RSAKeySmall { SmallInt n,e,d; SmallInt p,q; };`
-- Funkcje pomocnicze: `serialize_key()` i `deserialize_key()` w prostym tekstowym formacie dla debugowania.
+8) Krotki typ klucza i serializacja tekstowa
+- `struct RSAKeySmall { uint64_t n,e,d,p,q; };`
+- `serialize_key` / `deserialize_key` w formacie JSON: `{"n": ..., "e": ..., "d": ..., "p": ..., "q": ...}`
 
-9) Szyfrowanie i odszyfrowanie (bez paddingu, potem z prostym paddingiem)
-- Implementuj podstawowe:
-  - `SmallInt encrypt_raw(SmallInt m, SmallInt e, SmallInt n) = mod_pow(m, e, n)`
-  - `SmallInt decrypt_raw(SmallInt c, SmallInt d, SmallInt n) = mod_pow(c, d, n)`
-- Test integracyjny: dla losowych `m < n`, sprawdź `decrypt(encrypt(m)) == m`.
-- Następnie dołącz prosty padding-prototyp:
-  - Prosty scheme: przed konwersją do liczby dołącz stały nagłówek i losowe bajty (nieprodukcyjne). Alternatywnie zaimplementuj uproszczone OAEP konceptualnie (MGF1 z hashem na bajtach) — niżej minimalne sugestie.
+9) Szyfrowanie / odszyfrowanie prostym RSA
+- `encrypt_raw(m,e,n)` i `decrypt_raw(c,d,n)` via `mod_pow`.
+- **Obowiankowe walidacje**:
+  - `m >= n` - reject (exception)
+  - `c >= n` - reject (exception)
+- Testy integracyjne: dla losowych `m<n` sprawdz `decrypt(encrypt(m))==m`
 
-10) Prosty prototyp OAEP / PKCS#1 v1.5 (funkcjonalny, niebezpieczny)
-- Dla celu edukacyjnego zaimplementuj uproszczony OAEP:
-  - `hash = SHA-256(message)` (użyj biblioteki std/openssl jeśli dostępna; dla Etapu A można użyć `std::hash` jako placeholder).
-  - MGF: prosta mask-generation oparta na hashach.
-  - Funkcja `oaep_encode(message, k)` i `oaep_decode(encoded, k)` bez zabezpieczeń CT.
-- Testy: pozytywne i negatywne (uszkodzony padding powinien być odrzucony).
+10) Podpis i weryfikacja (nauka)
+- **Haszowanie**: SHA-256 (mozna inline'owac prosta implementacje)
+  - **ZAKAZANE**: `std::hash<std::string>` (nie jest kryptograficznie bezpieczna)
+- Hash result: modulo n
+- `sign(msg,d,n)`, `verify(msg,s,e,n)`
+- Testy: poprawny podpis musi verify, zmodyfikowany tekst musi falszywie
 
-11) Podpisywanie i weryfikacja (edukacyjne)
-- Podpis: `s = mod_pow(hash(message), d, n)` (hash jako liczba zmniejszona modulo n).
-- Weryfikacja: `mod_pow(s, e, n) == hash(message)`.
-- Testy: sygnatura poprawna dla różnych komunikatów; niepoprawna przy zmianie komunikatu.
+11) Testy jednostkowe i integracyjne
+- **Modul smallint**: `mod_pow`, `egcd`, `mod_inv`, `divmod`
+- **Prime testing**: `is_probable_prime` (znane pierwsze, znane zlozone)
+- **Key generation**: `keygen` (p != q, (e*d) % phi == 1)
+- **Encryption/Decryption**: `encrypt/decrypt` (roundtrip, m >= n reject)
+- **Signature**: `sign/verify` (poprawny, zmodyfikowany tekst falszywy)
+- **Testy negatywne**: m>=n (exception), e bez odwrotnosci, uszkodzony podpis
 
-12) Testy jednostkowe i integracyjne
-- Jednostkowe (funkcje): `mod_pow`, `egcd`, `mod_inv`, `is_probable_prime`.
-- Integracyjne: cały flow: keygen -> encrypt -> decrypt; keygen -> sign -> verify.
-- Negatywne testy: nieprawidłowe paddingi, `m >= n`, `e` nieodwracalny.
+12) Constant-time i side-channel security (edukacyjne uwagi)
+- `mod_pow` w encryption/decryption jest podatna na timing attacks
+- **To jest znane ograniczenie tego wariantu edukacyjnego**
+- Memory cleanup: tajne wartosci (`d`, `p`, `q`) powinne byc zerowane
+- **TODO**: Dodac w przyszlego BigInt wariantu
 
-13) Logging, diagnostyka i limity testów
-- Dodaj logowanie/assercje w trybie debug: liczba iteracji próby znalezienia pierwszej, porażki M-R, komunikaty o overflow.
+13) Dokumentacja migracji na BigInt
+- Lista funkcji do przejscia: `mod_pow`, `egcd`, `mod_inv`, `is_probable_prime`, `keygen`, `encrypt/decrypt`, `sign/verify`
+- Miejsca wymagajace constant-time: `mod_pow` (dla private key), `mod_inv`
+- TODO: memory cleanup, proper CSPRNG
 
-14) Dokumentacja i checklista migracji na BigInt
-- Po zakończeniu Etapu A przygotuj krótki raport zawierający:
-  - Mapowanie funkcji `SmallInt` → interfejs `BigIntLike` (nazwy funkcji, sygnatury),
-  - Lista testów jednostkowych, które muszą zostać przeniesione/uruchomione ponownie z backendem bignum,
-  - Potencjalne miejsca wymagające constant-time i blindingu w backendzie bignum.
+Uwagi bezpieczestwa
+- projekt edukacyjny; nie do produkcyjnego uzytku.
+- **ZAKAZANE**: `std::hash`, `rand()` - nie sa kryptograficznie bezpieczne
+- **UWAGA**: brak constant-time, brak memory cleanup - edukacyjny wariant tylko
+- **UWAGA**: MT19937 nie jest CSPRNG - dla nauki OK, dla produkcji nie
 
-Pliki sugerowane do utworzenia (minimalne)
-- `src/smallint.h`, `src/smallint.cpp` — adapter + mod_pow + egcd + mod_inv
-- `src/rsa_small.h`, `src/rsa_small.cpp` — keygen, encrypt/decrypt, sign/verify
-- `src/oaep_small.h`, `src/oaep_small.cpp` — prosty padding prototyp
-- `tests/test_smallint.cpp`, `tests/test_rsa_small.cpp` — jednostkowe + integracyjne
-
-Kryteria ukończenia Etapu A
-- Wszystkie jednostkowe funkcje przechodzą testy (mod_pow, egcd, mod_inv, is_prime).
-- Generacja pary kluczy działa powtarzalnie dla zadanych parametrów i przechodzi podstawowe warunki.
-- Dla losowych `m < n`, `decrypt(encrypt(m)) == m`.
-- Podpis-weryfikacja działa poprawnie dla testowych komunikatów.
-- Przygotowany dokument migracji do `BigIntLike`.
-
-Uwagi bezpieczeństwa (przypomnienie)
-- Etap A to prototyp edukacyjny — nie używać do rzeczywistych danych. Zamiast `std::hash` użyć rzeczywistego algorytmu hash (np. SHA-256) po migracji.
-- Upewnij się, że w migracji do bignum zadbasz o CSPRNG, padding OAEP i constant-time.
-
-Jeśli chcesz, mogę teraz:
-- wygenerować szkielet plików źródłowych (nagłówki i puste implementacje) oraz testów, albo
-- stworzyć konkretne implementacje funkcji `mod_pow`, `egcd` i `mod_inv` w C++ dla prototypu.
