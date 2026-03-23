@@ -2,6 +2,8 @@
 
 Cel: dostarczyć kompletny, krok-po-kroku plan implementacji algorytmu RSA od podstaw — bez kodu, z wyjaśnieniem poszczególnych komponentów, które trzeba zaimplementować i przetestować.
 
+Jest to projekt studencki, edukacyjny. Będzie implementowany w C++ (z opcją użycia biblioteki bignum, np. Botan::BigInt), ale plan jest napisany w sposób niezależny od języka, żeby nie podpowiadać konkretnych rozwiązań implementacyjnych i w ten sposób zachęcać do samodzielnego myślenia o strukturze kodu i algorytmach oraz stanowić trening programowania w C++.
+
 **1. Przegląd i założenia**
 - Opis: RSA to asymetryczny system klucza publicznego oparty na trudności faktoryzacji dużych liczb całkowitych. Główne operacje to: generowanie pary kluczy (publiczny, prywatny), szyfrowanie/odszyfrowywanie, podpisywanie/weryfikacja.
 - Zakres implementacji: generowanie kluczy, operacje modularne, bezpieczeństwo (padding, losowość), optymalizacje (CRT), testy, interfejs API i formaty przechowywania kluczy.
@@ -92,6 +94,49 @@ Jeśli chcesz, mogę teraz:
 - wygenerować listę testów jednostkowych na podstawie powyższego planu, lub
 - przygotować szkielet plików i interfejsów (nagłówki/kontrakty funkcji) bez implementacji logiki.
 
+## 15. Prototypowanie: demonstracyjny "small-int" → migracja do bignum
+
+Cel: szybko zweryfikować logikę algorytmiczną (potęgowanie modularne, EEA, Miller–Rabin, padding) przy użyciu prostszych typów (`long`), a następnie w prosty sposób przejść do prawdziwej arytmetyki wielkiej (`Botan::BigInt` lub inna biblioteka).
+
+Krótki opis podejścia:
+- Etap A — prototyp funkcjonalny (small-int): zaimplementuj algorytmy używając natywnych typów całkowitych (`long`) tak, żeby łatwo debugować i walidować logikę.
+- Etap B — abstrakcja arytmetyki: zdefiniuj interfejs `BigIntLike` (operacje: add, sub, mul, divmod, mod_pow, inv_mod, randomize, from_bytes, to_bytes).
+- Etap C — adaptery: stwórz `SmallIntAdapter` (wrap dla `long`) oraz `BotanBigIntAdapter` (używający `Botan::BigInt`).
+- Etap D — migracja testów i optymalizacje: uruchom testy porównawcze i dopracuj backend bignum (CRT, blinding, Montgomery).
+
+Plusy takiego podejścia:
+- Szybkie prototypowanie i walidacja algorytmów bez komplikacji bignum.
+- Łatwiejsze debugowanie i edukacja — zachowanie krok po kroku na małych liczbach.
+- Możliwość równoległej implementacji i porównań (wyniki i wydajność).
+
+Minusy / ryzyka:
+- Prototyp może dawać fałszywe poczucie bezpieczeństwa (przepełnienia, brak CT, inne zachowanie arytmetyki).
+- Optymalizacje i błędy specyficzne dla wielowyrazowych implementacji ujawnią się dopiero po migracji.
+- Prototyp nie nadaje się do produkcyjnego użytku.
+
+Rekomendacje praktyczne:
+- Od samego początku używaj CSPRNG do generowania kandydatów (nie `rand()`).
+- Trzymaj logikę algorytmiczną oddzieloną od implementacji arytmetyki przez `BigIntLike`.
+- Dla każdego testu na `SmallIntAdapter` dodaj analogiczny test na `BotanBigIntAdapter` (regresja/porównanie wyników).
+- Po migracji wykonaj audyt constant-time i dodaj blinding w backendzie bignum.
+
+Plan migracji (konkretne kroki):
+1. Implementacja prototypu (small-int): generator kluczy (na małych bitach), Miller–Rabin, modular exponentiation, EEA, OAEP (funkcjonalny).
+2. Wprowadzenie `BigIntLike` i zaimplementowanie `SmallIntAdapter` (wrap nad `long`).
+3. Implementacja `BotanBigIntAdapter` używającego `Botan::BigInt`.
+4. Uruchomienie zestawu testów porównawczych: szyfrowanie/odszyfrowanie, podpis/weryfikacja, testy negatywne.
+5. Dopracowanie backendu bignum: CRT, blinding, ewentualne optymalizacje Montgomery.
+
+Proponowane testy porównawcze:
+- Porównanie wyników enc/dec i sign/verify dla zestawu losowych wejść między `SmallIntAdapter` i `BotanBigIntAdapter`.
+- Testy brzegowe: największe dopuszczalne wiadomości, złe paddingi, niepoprawne klucze.
+- Property tests: losowe p,q z obu backendów dają zgodne n,e,d (matematycznie równoważne) dla tych samych parametrów.
+
+Krótka uwaga bezpieczeństwa:
+- Nigdy nie używaj prototypu do generowania kluczy produkcyjnych ani do przetwarzania prawdziwych danych. Prototyp służy wyłącznie do nauki i walidacji logiki.
+
+Jeśli chcesz, mogę teraz automatycznie wygenerować szkic interfejsu `BigIntLike` oraz pliki szkieletowe `SmallIntAdapter` i `BotanBigIntAdapter`.
+
 ## Wnioski i mapa integracji z Botan
 
 **Wnioski (Botan jako rekomendacja):**
@@ -132,8 +177,4 @@ Jeśli chcesz, mogę teraz:
 - `Botan::RSA_PublicKey::get_n()/get_e()/public_key_bits()`
 - `Botan::BigInt::randomize()/from_bytes()/serialize()/encode_1363()/random_integer()/bits()/bytes()`
 
----
-Powiadom mnie, jeśli chcesz, żebym automatycznie:
-- wygenerował szkielet nagłówków i wrapperów (`rsa_botan_skeleton.h/.cpp`) używających Botan, lub
-- przygotował krótkie przykładowe fragmenty użycia (kod-wywołanie) pokazujące generowanie klucza i szyfrowanie z Botan.
 
