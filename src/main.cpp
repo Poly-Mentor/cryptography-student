@@ -3,7 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <stdexcept>
-#include "blowfish.h"
+#include "blowfish/blowfish.h"
 
 enum class CipherAlgorithm {
     Blowfish,
