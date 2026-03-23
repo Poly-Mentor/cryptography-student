@@ -6,7 +6,7 @@
 #include <cstring>
 
 #define private public
-#include "../src/blowfish.h"
+#include "../../src/blowfish/blowfish.h"
 #undef private
 
 static void fail(const std::string &msg) {
