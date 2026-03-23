@@ -7,7 +7,9 @@ Założenia i ograniczenia
 - CSPRNG: `std::random_device` + `std::mt19937_64` jako edukacyjny placeholder.
   - **Uwaga**: MT-19937 nie jest cryptographically secure RNG
   - Dla edukacji: wystarczajace, dla produkcji: /dev/urandom lub systemowy RNG
-- Zakres bitów: 16, 24, 32, maksymalnie 48/64 bitów (ze względu na overflow przy mnożeniu w `uint64_t`).
+- Zakres bitów: 16, 24, 32, maksymalnie 48 bitów (ze względu na overflow przy mnożeniu w `uint64_t`).
+  - **Uwaga**: 64-bitowy klucz (p,q po 32 bity) nie zmieści się w uint64 bez overflow przy `p*q` i `(p-1)*(q-1)`.
+  - Dla kluczy >48 bitów wymagany `__uint128_t` lub BigInt.
 
 Kolejność implementacji (prosty krok-po-kroku)
 
@@ -36,6 +38,7 @@ Kolejność implementacji (prosty krok-po-kroku)
 - **Bazy testowe dla uint64_t**: {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37}
 - Lista małych dzielników do 1000 (szybki filtr)
 - `is_probable_prime(n,k)` z k=5..10 rundami Miller-Rabin
+  - Dla `n <= 37`: użyj trial division (bez MR)
 - testy z wektorami znanych liczb pierwszych i złożonych
 
 6) Generowanie liczby pierwszej
@@ -51,13 +54,14 @@ Kolejność implementacji (prosty krok-po-kroku)
 - `p`, `q` po `bits/2`.
 - `n=p*q`, `phi=(p-1)*(q-1)`.
 - `e=65537` z fallback na losowe `e`:
+  - Losuj nieparzyste `e` z zakresu [3, phi-1]
   - Fallback limit: max 10000 iteracji
   - Walidacja: `gcd(e, phi) == 1`
 - `d = mod_inv(e, phi)`.
 - **Obowiązkowa walidacja**:
   - `assert(p != q)` - p i q muszą byc rozne
   - `assert((e * d) % phi == 1)`
-  - **Test decrypt(encrypt(m)) == m** dla kilka losowych `m < n`
+  - **Test decrypt(encrypt(m)) == m** dla kilka losowych `m < n` (opcjonalnie w debug, obowiązkowo w testach)
 
 8) Krotki typ klucza i serializacja tekstowa
 - `struct RSAKeySmall { uint64_t n,e,d,p,q; };`

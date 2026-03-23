@@ -4,10 +4,12 @@ Cel: prosty wariant RSA do nauki na poziomie `unsigned long`/`uint64_t` bez zło
 
 1. Założenia
 - Typ podstawowy: `uint64_t`.
-- Wszystko działa na maszynowych liczbach całkowitych; zakres bitów dobierany w testach (16/24/32/48/64).
+- Wszystko działa na maszynowych liczbach całkowitych; zakres bitów dobierany w testach (16, 24, 32, maksymalnie 48).
+- **Ograniczenie uint64**: maksymalny rozmiar klucza to 48 bitów (p,q po 24 bity). Przy 48 bitach: p,q < 2^24, n < 2^48, phi < 2^48 — wszystko się mieści.
+- Dla kluczy >48 bitów wymagany `__uint128_t` lub BigInt.
 
 2. Moduł `arithmetics` (operacje arytmetyczne)
-- `add`, `sub`, `mul`, `divmod` (natywne, z opcjonalną obsługą overflow debug),
+- `add`, `sub`, `mul`, `divmod` (natywne, z opcjonalną obsługą overflow debug) — `divmod` opcjonalne, ułatwia `egcd`,
 - `mod_pow` (square-and-multiply),
 - `egcd`, `mod_inv`.
 
@@ -19,6 +21,7 @@ Cel: prosty wariant RSA do nauki na poziomie `unsigned long`/`uint64_t` bez zło
 4. Test pierwszości i generator pierwszych
 - Lista małych dzielników i szybki filtr.
 - `is_probable_prime(n,k)` Miller–Rabin.
+  - Dla `n <= 37`: użyj trial division (bez MR).
 - `random_odd(bits)` + `is_probable_prime` by znaleźć pierwsze wartości.
 
 5. Klasyczne RSA
@@ -28,9 +31,11 @@ Cel: prosty wariant RSA do nauki na poziomie `unsigned long`/`uint64_t` bez zło
   - `assert(p != q)` — p i q muszą być różne
   - `assert(gcd(e, phi) == 1)` — e musi być względnie pierwsze z phi
   - `assert((e * d) % phi == 1)` — sprawdzenie matematyczne
-- Fallback na losowe `e`: limit max 10000 iteracji, exception jeśli nie znalezione
+- Fallback na losowe `e`:
+  - Losuj nieparzyste `e` z zakresu [3, phi-1]
+  - Limit max 10000 iteracji, exception jeśli nie znalezione
 - `encrypt_raw`, `decrypt_raw` przez `mod_pow`.
-- **Test warunku**: `decrypt(encrypt(m)) == m` dla kilka losowych `m < n` (dodać już w keygenku)
+- **Test warunku**: `decrypt(encrypt(m)) == m` dla kilka losowych `m < n` (opcjonalnie w debug, obowiązkowo w testach)
 
 6. Proste podpisy
 - `hash_to_int(message)` — SHA-256 (można inline'ować prostą implementację) zamiast `std::hash`, `sign(msg,d,n)`, `verify(msg,s,e,n)`.
