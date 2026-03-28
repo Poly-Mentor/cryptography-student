@@ -26,9 +26,11 @@ public:
      * Calculate the greatest common divisor of a and b, along with coefficients x and y such that ax + by = gcd(a, b).
      * @param a First number
      * @param b Second number
-     * @return A pair containing the gcd and the coefficients (gcd, x, y)
+     * @param gcd Pointer to store the greatest common divisor
+     * @param x Pointer to store the coefficient for a
+     * @param y Pointer to store the coefficient for b
      */
-    static std::pair<uint64_t, uint64_t> egcd(uint64_t a, uint64_t b);
+    static void egcd(uint64_t a, uint64_t b, uint64_t *gcd, int64_t *x, int64_t *y);
 
     /**
      * Calculate the modular inverse of a modulo m, i.e., find x such that (a * x) mod m = 1.

@@ -22,3 +22,20 @@ uint64_t Arithmetics::mod_pow(uint64_t base, uint64_t exp, uint64_t mod)
     
     return result;
 }
+
+
+void Arithmetics::egcd(uint64_t A, uint64_t B, uint64_t *gcd, int64_t *x, int64_t *y) {
+    if (B > A)
+        std::swap(A, B);  // Ensure that A >= B
+
+    if (B == 0) {
+        *gcd = A; // GCD is A when B is 0
+        *x = 1;
+        *y = 0;
+    } else {
+        egcd(B, A % B, gcd, x, y); // Recursive call with B and A mod B
+        int64_t temp = *x; // Update x and y using results from recursive call
+        *x = *y;
+        *y = temp - (A / B) * (*y); // Update y based on the quotient of A and B
+    }
+}
