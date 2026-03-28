@@ -21,10 +21,12 @@ Kolejność implementacji (prosty krok-po-kroku)
 - używamy bezpośrednio `uint64_t` i standardowych operatorów (+, -, *).
 - Dodatkowe funkcje pomocnicze (add/sub/mul) są opcjonalne, tylko jeśli potrzebna kontrola overflow.
 - Funkcje obowiązkowe:
-  - `std::pair<uint64_t, uint64_t> divmod(uint64_t a, uint64_t b)`
+  - ~~`std::pair<uint64_t, uint64_t> divmod(uint64_t a, uint64_t b)`~~ to już jest wbudowane: div()
   - `uint64_t mod_pow(uint64_t base, uint64_t exp, uint64_t mod)`
-  - `uint64_t egcd(uint64_t a, uint64_t b, uint64_t &x, uint64_t &y)`
+  - `uint64_t egcd(uint64_t a, uint64_t b, uint64_t &x, uint64_t &y)` 
   - `uint64_t mod_inv(uint64_t a, uint64_t m)`
+
+https://github.com/TheAlgorithms/C-Plus-Plus/tree/master/math
 
 3) Modular exponentiation
 - Square-and-multiply.

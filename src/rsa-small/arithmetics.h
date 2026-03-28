@@ -11,14 +11,6 @@
 class Arithmetics {
 
 public:
-    /** 
-     * Calculate quotient and remainder of a divided by b.
-     * @param a Dividend
-     * @param b Divisor
-     * @return A pair containing the quotient and remainder (q, r) such that a = b*q + r and 0 <= r < b
-     * @throws std::invalid_argument if b is zero
-     */
-    static std::pair<uint64_t, uint64_t> divmod(uint64_t a, uint64_t b);
 
     /**
      * Calculate (base^exp) mod mod using the square-and-multiply algorithm.
