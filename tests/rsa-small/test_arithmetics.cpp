@@ -58,11 +58,43 @@ static void test_egcd() {
     test_case_name = "egcd test 3";
     if (gcd == 1 && 365*x + 82*y == gcd) pass(test_case_name);
     else fail(test_case_name);
+
+    Arithmetics::egcd(26UL, 418UL, &gcd, &x, &y);
+    test_case_name = "egcd test 4";
+    if (gcd == 2 && 26*x + 418*y == gcd) pass(test_case_name);
+    else fail(test_case_name);
+}
+
+static void test_mod_inv() {
+    uint64_t test_case_1 = Arithmetics::mod_inv(3UL, 11UL);
+    std::string test_case_name = "mod_inv test 1";
+    if (test_case_1 == 4) pass(test_case_name);
+    else fail(test_case_name);
+
+    uint64_t test_case_2 = Arithmetics::mod_inv(10UL, 17UL);
+    test_case_name = "mod_inv test 2";
+    if (test_case_2 == 12) pass(test_case_name);
+    else fail(test_case_name);
+
+    uint64_t test_case_3 = Arithmetics::mod_inv(7UL, 26UL);
+    test_case_name = "mod_inv test 3";
+    if (test_case_3 == 15) pass(test_case_name);
+    else fail(test_case_name);
+
+    try {
+        Arithmetics::mod_inv(6UL, 12UL);
+        fail("mod_inv test 4 should have thrown an exception");
+    } catch (const std::invalid_argument&) {
+        pass("mod_inv test 4");
+    } catch (const std::exception &e) {
+        fail(std::string("mod_inv test 4 threw unexpected exception: ") + e.what());
+    }
 }
 
 int main() {
 
     test_mod_pow();
     test_egcd();
-    
+    test_mod_inv();
+
 }
