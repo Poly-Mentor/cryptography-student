@@ -25,17 +25,35 @@ uint64_t Arithmetics::mod_pow(uint64_t base, uint64_t exp, uint64_t mod)
 
 
 void Arithmetics::egcd(uint64_t A, uint64_t B, uint64_t *gcd, int64_t *x, int64_t *y) {
-    if (B > A)
-        std::swap(A, B);  // Ensure that A >= B
-
     if (B == 0) {
-        *gcd = A; // GCD is A when B is 0
+        *gcd = A;
         *x = 1;
         *y = 0;
-    } else {
-        egcd(B, A % B, gcd, x, y); // Recursive call with B and A mod B
-        int64_t temp = *x; // Update x and y using results from recursive call
-        *x = *y;
-        *y = temp - (A / B) * (*y); // Update y based on the quotient of A and B
+        return;
     }
+
+    uint64_t g;
+    int64_t x1, y1;
+    egcd(B, A % B, &g, &x1, &y1);
+    *gcd = g;
+    *x = y1;
+    *y = x1 - (int64_t)(A / B) * y1;
+}
+
+uint64_t Arithmetics::mod_inv(uint64_t a, uint64_t m)
+{
+    uint64_t gcd;
+    int64_t x, y;
+    egcd(a, m, &gcd, &x, &y);
+    if (gcd != 1) {
+        throw std::invalid_argument("Modular inverse does not exist since gcd(a, m) != 1");
+    } else {
+        // Normalize x to be in range [0, m-1] using signed arithmetic
+        int64_t mm = static_cast<int64_t>(m);
+        int64_t xm = x % mm;
+        if (xm < 0) xm += mm;
+        return static_cast<uint64_t>(xm);
+    }
+    
+    return 0;
 }
