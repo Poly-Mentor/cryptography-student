@@ -41,4 +41,19 @@ public:
      * @throws std::invalid_argument if the modular inverse does not exist (i.e., if gcd(a, m) != 1)
      */
     static uint64_t mod_inv(uint64_t a, uint64_t m);
+
+    /**
+     * Perform the Miller-Rabin primality test to determine if n is a probable prime.
+     * @param n The number to test for primality
+     * @param k The number of rounds of testing to perform (higher k increases accuracy)
+     * @return true if n is a probable prime, false otherwise
+     */
+    static bool is_probable_prime(uint64_t n, int k = 5);
+
+    /**
+     * Check if n is prime using trial division. This is a simple and efficient method for small numbers (up to around 10^6).
+     * @param n The number to test for primality
+     * @return true if n is prime, false otherwise
+     */
+    static bool is_prime(uint64_t n);
 };
