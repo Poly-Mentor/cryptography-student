@@ -1,5 +1,7 @@
 #include "rsa-small.h"
 
+static const bool verbose = true;
+
 keyPair RSA::generate_keys(uint8_t bit_length)
 {
 
@@ -7,8 +9,25 @@ keyPair RSA::generate_keys(uint8_t bit_length)
         throw std::invalid_argument("Bit length must be between 9 and 48");
     }
 
-    uint64_t p = generate_prime(bit_length / 2);
-    uint64_t q = generate_prime(bit_length / 2);
+    uint8_t p_bits = bit_length / 2;
+    uint8_t q_bits = bit_length - p_bits;
+
+    if (verbose) {
+        std::cout << "Generating p with " << (int)p_bits << " bits...\n";
+    }
+
+    uint64_t p = generate_prime(p_bits);
+    uint64_t q = generate_prime(q_bits);
+
+    // Ensure p and q are distinct
+    while (q == p) {
+        q = generate_prime(q_bits);
+    }
+
+    if (verbose) {
+        std::cout << "Generated primes:\np = " << p << "\nq = " << q << "\n";
+    }
+
     uint64_t n = p * q;
     uint64_t phi = (p - 1) * (q - 1);
     uint64_t e;
@@ -31,6 +50,10 @@ keyPair RSA::generate_keys(uint8_t bit_length)
 
     key publicKey = {e, n};
     key privateKey = {d, n};
+
+    if (verbose) {
+        std::cout << "Generated keys:\nPublic key: (e=" << publicKey.exponent << ", n=" << publicKey.modulus << ")\nPrivate key: (d=" << privateKey.exponent << ", n=" << privateKey.modulus << ")\n";
+    }
 
     return keyPair({publicKey, privateKey});
 }

@@ -2,6 +2,9 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <iostream>
+#include <vector>
+#include <string>
 
 #include "arithmetics.h"
 #include "rng.h"
