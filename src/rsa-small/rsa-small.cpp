@@ -18,7 +18,7 @@ keyPair RSA::generate_keys(uint8_t bit_length)
         phi_bit_length++;
     }
 
-    RNG rng;
+    RNG rng = RNG();
     uint64_t gcd;
     int64_t x, y;
     do {
@@ -67,7 +67,7 @@ std::vector<uint8_t> RSA::decrypt(const std::vector<uint64_t> &ciphertext, const
 
 uint64_t RSA::generate_prime(uint8_t bit_length)
 {
-    RNG rng;
+    RNG rng = RNG();
     uint64_t prime_candidate;
 
     do {

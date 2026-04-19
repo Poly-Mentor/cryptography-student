@@ -10,6 +10,7 @@ build_blowfish:
 build_rsa_small:
 	g++ -c src/rsa-small/arithmetics.cpp -o bin/arithmetics.o
 	g++ -c src/rsa-small/rng.cpp -o bin/rng.o
+	g++ -c src/rsa-small/rsa-small.cpp -o bin/rsa-small.o
 
 build_blowfish_test: build_blowfish
 	g++ -c tests/blowfish/test_blowfish.cpp -o bin/test_blowfish.o
@@ -23,11 +24,13 @@ build_rsa_small_tests: build_rsa_small
 	g++ -c tests/rsa-small/test_rng.cpp -o bin/test_rng.o
 	g++ bin/test_arithmetics.o bin/arithmetics.o -o bin/test_arithmetics
 	g++ bin/test_rng.o bin/rng.o -o bin/test_rng
+	g++ -c tests/rsa-small/test_rsa-small.cpp -o bin/test_rsa-small.o
+	g++ bin/test_rsa-small.o bin/rsa-small.o bin/arithmetics.o bin/rng.o -o bin/test_rsa-small
 
 run_rsa_small_tests: build_rsa_small_tests
 	./bin/test_arithmetics
 	./bin/test_rng
-
+	./bin/test_rsa-small
 
 build_tests: build_blowfish_test build_rsa_small_tests
 	
