@@ -91,10 +91,44 @@ static void test_mod_inv() {
     }
 }
 
+static void test_is_probable_prime() {
+    struct TestCase {
+        uint64_t n;
+        bool expected;
+    };
+
+    std::vector<TestCase> test_cases = {
+        {2UL, true},
+        {3UL, true},
+        {4UL, false},
+        {5UL, true},
+        {15UL, false},
+        {17UL, true},
+        {19UL, true},
+        {20UL, false},
+        {3132614951UL, true}, // 32-bit prime
+        {3132614953UL, false}, // 32-bit composite
+        {2322321709UL, true}, // 32-bit prime
+        {2322321711UL, false}, // 32-bit composite
+        {10645068389063303023UL, true}, // 64-bit prime
+        {10645068389063303025UL, false}, // 64-bit composite
+        {17970697029717014747UL, true}, // 64-bit prime
+        {17970697029717014749UL, false} // 64-bit composite
+    };
+
+    for (const auto& test_case : test_cases) {
+        bool result = Arithmetics::is_probable_prime(test_case.n);
+        std::string test_case_name = "is_probable_prime test for n=" + std::to_string(test_case.n);
+        if (result == test_case.expected) pass(test_case_name);
+        else fail(test_case_name);
+    }
+}
+
 int main() {
 
     test_mod_pow();
     test_egcd();
     test_mod_inv();
+    test_is_probable_prime();
 
 }

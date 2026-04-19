@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <utility>
 #include <stdexcept>
+#include <vector>
 
 
 /** 
@@ -44,16 +45,26 @@ public:
 
     /**
      * Perform the Miller-Rabin primality test to determine if n is a probable prime.
+     * This function uses a fixed set of bases that are sufficient to determine primality with certainty for 64-bit integers.
      * @param n The number to test for primality
-     * @param k The number of rounds of testing to perform (higher k increases accuracy)
      * @return true if n is a probable prime, false otherwise
      */
-    static bool is_probable_prime(uint64_t n, int k = 5);
+    static bool is_probable_prime(uint64_t n);
+
+    // /**
+    //  * Check if n is prime using trial division. This is a simple and efficient method for small numbers (up to around 10^6).
+    //  * @param n The number to test for primality
+    //  * @return true if n is prime, false otherwise
+    //  */
+    // static bool is_prime(uint64_t n);
+
+private:
 
     /**
-     * Check if n is prime using trial division. This is a simple and efficient method for small numbers (up to around 10^6).
-     * @param n The number to test for primality
-     * @return true if n is prime, false otherwise
+     * Perform one round of the Miller-Rabin primality test for a given a and n. This is a helper function used by is_probable_prime.
+     * @param n The number being tested for primality
+     * @param a The base to test against
+     * @return true if the test passes (indicating n is likely prime), false if it is certainly composite
      */
-    static bool is_prime(uint64_t n);
+    static bool miller_rabin_pass(uint64_t n, uint64_t a);
 };
