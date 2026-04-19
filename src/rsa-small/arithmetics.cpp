@@ -2,24 +2,19 @@
 
 uint64_t Arithmetics::mod_pow(uint64_t base, uint64_t exp, uint64_t mod)
 {
+    if (mod == 0) throw std::invalid_argument("mod must be > 0");
+
     uint64_t result = 1;
     base %= mod;
-
     if (base == 0) return 0;
 
     while (exp > 0)
     {
-        // Check if LSB is 1, if true, multiply result by base
-        if (exp & 1) result = ((result % mod) * (base % mod)) % mod;
-        
-        // Shift to next bit - loop will end when there are no more bits to process
+        if (exp & 1) result = Arithmetics::mul_mod(result, base, mod);
         exp = exp >> 1;
-
-        // Square the base to be used in next iteration
-        base = ((base % mod) * (base % mod)) % mod;
-
+        base = Arithmetics::mul_mod(base, base, mod);
     }
-    
+
     return result;
 }
 
@@ -101,4 +96,9 @@ bool Arithmetics::miller_rabin_pass(uint64_t n, uint64_t a)
     }
 
     return false;
+}
+
+uint64_t Arithmetics::mul_mod(uint64_t a, uint64_t b, uint64_t mod)
+{
+    return static_cast<uint64_t>((static_cast<unsigned __int128>(a) * b) % mod);
 }

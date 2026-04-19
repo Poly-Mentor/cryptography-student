@@ -67,4 +67,13 @@ private:
      * @return true if the test passes (indicating n is likely prime), false if it is certainly composite
      */
     static bool miller_rabin_pass(uint64_t n, uint64_t a);
+    
+    /**
+     * Compute (a * b) mod mod using a 128-bit intermediate to avoid overflow.
+     * @param a multiplicand
+     * @param b multiplier
+     * @param mod modulus
+     * @return (a * b) % mod computed without 64-bit overflow
+     */
+    static uint64_t mul_mod(uint64_t a, uint64_t b, uint64_t mod);
 };
