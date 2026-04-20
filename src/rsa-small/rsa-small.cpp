@@ -88,6 +88,36 @@ std::vector<uint8_t> RSA::decrypt(const std::vector<uint64_t> &ciphertext, const
     return plaintext;
 }
 
+std::vector<uint64_t> RSA::encryptText(const std::string &plaintext, const key &publicKey)
+{
+    std::vector<uint64_t> ciphertext = std::vector<uint64_t>();
+    ciphertext.reserve(plaintext.size());
+
+    
+    for (char c : plaintext) {
+        
+        ciphertext.push_back(Arithmetics::mod_pow(static_cast<uint64_t>(c), publicKey.exponent, publicKey.modulus));
+    }
+    return ciphertext;
+}
+
+std::string RSA::decryptText(const std::vector<uint64_t> &ciphertext, const key &privateKey)
+{
+    std::string plaintext;
+    plaintext.reserve(ciphertext.size());
+
+    for (uint64_t cipher : ciphertext)
+    {
+        uint64_t decrypted = Arithmetics::mod_pow(cipher, privateKey.exponent, privateKey.modulus);
+        if (decrypted > 255) {
+            throw std::runtime_error("Decrypted value exceeds byte size, likely due to incorrect key or corrupted ciphertext");
+        }
+        plaintext.push_back(static_cast<char>(decrypted));
+    }
+    
+    return plaintext;
+}
+
 uint64_t RSA::generate_prime(uint8_t bit_length)
 {
     RNG rng = RNG();
