@@ -27,13 +27,13 @@ class MD5
 
         void reset();
         // input preparation
-        std::vector<uint8_t> stringToBytes(const std::string &inputText);
-        std::vector<block> inputToBlocks(const std::vector<uint8_t> &inputBytes);
+        static std::vector<uint8_t> stringToBytes(const std::string &inputText);
+        static std::vector<block> inputToBlocks(const std::vector<uint8_t> &inputBytes);
         void mainLoop(const std::vector<block> &blocks);
         void ingestBlock(const block &blk);
 
         // data processing
-        word_t rotate(word_t input, int num);
+        static word_t rotate(word_t input, int num);
         
         // consts
         static constexpr state_t initialState =
