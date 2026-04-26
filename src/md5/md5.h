@@ -19,6 +19,7 @@ using block = std::array<word_t, 16>;
 class MD5
 {
     public:
+        MD5();
         std::string calculate(const std::vector<uint8_t> &inputBytes);
         std::string calculate(const std::string &inputText);
 

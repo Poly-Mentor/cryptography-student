@@ -1,4 +1,4 @@
-build: build_blowfish build_rsa_small
+build: build_blowfish build_rsa_small build_rsa_small
 	g++ src/main.cpp bin/blowfish.o bin/arithmetics.o bin/rng.o -o bin/app
 
 run: build
@@ -11,6 +11,9 @@ build_rsa_small:
 	g++ -c src/rsa-small/arithmetics.cpp -o bin/arithmetics.o
 	g++ -c src/rsa-small/rng.cpp -o bin/rng.o
 	g++ -c src/rsa-small/rsa-small.cpp -o bin/rsa-small.o
+
+build_md5:
+	g++ -c src/md5/md5.cpp -o bin/md5.o
 
 build_blowfish_test: build_blowfish
 	g++ -c tests/blowfish/test_blowfish.cpp -o bin/test_blowfish.o
@@ -32,7 +35,14 @@ run_rsa_small_tests: build_rsa_small_tests
 	./bin/test_rng
 	./bin/test_rsa-small
 
-build_tests: build_blowfish_test build_rsa_small_tests
+build_md5_test: build_md5
+	g++ -c tests/md5/test_md5.cpp -o bin/test_md5.o
+	g++ bin/test_md5.o bin/md5.o -o bin/test_md5
+
+run_md5_test: build_md5_test
+	./bin/test_md5
+
+build_tests: build_blowfish_test build_rsa_small_tests build_md5_test
 	
 
 run_tests: build_tests
