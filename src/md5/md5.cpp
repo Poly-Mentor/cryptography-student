@@ -5,6 +5,40 @@ MD5::MD5()
     reset();
 }
 
+std::string MD5::calculate(const std::vector<uint8_t> &inputBytes)
+{
+    reset();
+    std::vector<block> blocks = inputToBlocks(inputBytes);
+    mainLoop(blocks);
+    std::string result;
+
+    // Convert final state to little-endian byte string
+    for (word_t word : {currentState.A, currentState.B, currentState.C, currentState.D})
+    {
+        for (int i = 0; i < 4; ++i)
+        {
+            uint8_t byte = (word >> (8 * i)) & 0xFF;
+            result.push_back(static_cast<char>(byte));
+        }
+    }
+    // Convert raw 16-byte digest to lowercase hexadecimal string
+    static const char hexChars[] = "0123456789abcdef";
+    std::string hexResult;
+    hexResult.reserve(result.size() * 2);
+    for (unsigned char byte : result)
+    {
+        hexResult.push_back(hexChars[(byte >> 4) & 0xF]);
+        hexResult.push_back(hexChars[byte & 0xF]);
+    }
+    return hexResult;
+}
+
+std::string MD5::calculate(const std::string &inputText)
+{
+    std::vector<uint8_t> inputBytes = stringToBytes(inputText);
+    return calculate(inputBytes);
+}
+
 void MD5::reset()
 {
     currentState = initialState;
@@ -66,4 +100,66 @@ std::vector<block> MD5::inputToBlocks(const std::vector<uint8_t> &inputBytes)
     }
 
     return output;
+}
+
+void MD5::mainLoop(const std::vector<block> &blocks)
+{
+    for (const block &blk : blocks)
+    {
+        ingestBlock(blk);
+    }
+}
+
+void MD5::ingestBlock(const block &blk)
+{
+    // Initialize working variables with current state
+    word_t a = currentState.A;
+    word_t b = currentState.B;
+    word_t c = currentState.C;
+    word_t d = currentState.D;
+
+    for (int i = 0; i < 64; ++i)
+    {
+        // F - nonlinear function, g - index of word in block to use
+        word_t F;
+        int g;
+        if (i < 16)
+        {
+            F = (b & c) | ((~b) & d);
+            g = i;
+        }
+        else if (i < 32)
+        {
+            F = (d & b) | ((~d) & c);
+            g = (5 * i + 1) % 16;
+        }
+        else if (i < 48)
+        {
+            F = b ^ c ^ d;
+            g = (3 * i + 5) % 16;
+        }
+        else
+        {
+            F = c ^ (b | (~d));
+            g = (7 * i) % 16;
+        }
+
+        word_t temp = a + F + k[i] + blk[g];
+        a = d;
+        d = c;
+        c = b;
+        b = b + rotate(temp, r[i]);
+    }
+
+    // Add this chunk's hash to result so far
+    currentState.A += a;
+    currentState.B += b;
+    currentState.C += c;
+    currentState.D += d;
+
+}
+
+word_t MD5::rotate(word_t input, int num)
+{
+    return (input << num) | (input >> (32 - num));
 }
