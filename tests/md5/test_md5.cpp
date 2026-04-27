@@ -103,36 +103,66 @@ void inputToBlocks_unittest()
 
 // -----------------------------------------------------------------------------------------
 
-// void rotate_unittest()
-// {
-//     word_t input = 0x12345678;
-//     int num = 4;
-//     word_t expectedOutput = 0x23456781; // Rotate left by 4 bits
-//     word_t output = MD5::rotate(input, num);
+void rotate_unittest()
+{
+    word_t input = 0x12345678;
+    int num = 4;
+    word_t expectedOutput = 0x23456781; // Rotate left by 4 bits
+    word_t output = MD5::rotate(input, num);
     
-//     if (output != expectedOutput)
-//     {
-//         fail("rotate output mismatch: got " + std::to_string(output) + " expected " + std::to_string(expectedOutput));
-//     }
-//     pass("rotate produces correct output for input 0x12345678 rotated by 4 bits");
+    if (output != expectedOutput)
+    {
+        fail("rotate output mismatch: got " + std::to_string(output) + " expected " + std::to_string(expectedOutput));
+    }
+    pass("rotate produces correct output for input 0x12345678 rotated by 4 bits");
 
-//     // ------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------
 
-//     input = 0xAAAA5555;
-//     num = 16;
-//     word_t expectedOutput2 = 0x5555AAAA; // Rotate left by 16 bits
-//     word_t output2 = MD5::rotate(input, num);
+    input = 0xAAAA5555;
+    num = 16;
+    word_t expectedOutput2 = 0x5555AAAA; // Rotate left by 16 bits
+    word_t output2 = MD5::rotate(input, num);
 
-//     if (output2 != expectedOutput2)
-//     {
-//         fail("rotate output mismatch: got " + std::to_string(output2) + " expected " + std::to_string(expectedOutput2));
-//     }
-//     pass("rotate produces correct output for input 0xAAAA5555 rotated by 16 bits");
-// }
+    if (output2 != expectedOutput2)
+    {
+        fail("rotate output mismatch: got " + std::to_string(output2) + " expected " + std::to_string(expectedOutput2));
+    }
+    pass("rotate produces correct output for input 0xAAAA5555 rotated by 16 bits");
+}
+
+void calculate_test()
+{
+    std::vector<std::pair<std::string, std::string>> testCases = {
+        {"", "d41d8cd98f00b204e9800998ecf8427e"},
+        {"Hello, World!", "65a8e27d8879283831b664bd8b7f0ad4"},
+        {"abc", "900150983cd24fb0d6963f7d28e17f72"},
+        {"message digest", "f96b697d7cb7938d525a2f31aaf161d0"},
+        {"abcdefghijklmnopqrstuvwxyz", "c3fcd3d76192e4007dfb496cca67e13b"},
+        {"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "d174ab98d277d9f5a5611c2c9f419d9f"},
+        {"12345678901234567890123456789012345678901234567890123456789012345678901234567890", "57edf4a22be3c955ac49da2e2107b67a"}
+    };
+
+    MD5 md5;
+
+    for (const std::pair<std::string, std::string> &testCase : testCases)
+    {
+        const std::string &input = testCase.first;
+        const std::string &expectedHash = testCase.second;
+
+        std::string actualHash = md5.calculate(input);
+        if (actualHash != expectedHash)
+        {
+            fail("calculate output mismatch for input '" + input + "'", actualHash, expectedHash);
+        }
+        pass("calculate produces correct hash for input '" + input + "'");
+    }
+}
+
 
 int main(){
     stringToBytes_unittest();
     inputToBlocks_unittest();
-    // rotate_unittest();
+    rotate_unittest();
+    calculate_test();
     return 0;
 }
