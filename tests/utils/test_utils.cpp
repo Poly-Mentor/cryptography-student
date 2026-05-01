@@ -22,7 +22,7 @@ static void pass(const std::string &msg) {
 
 void readFileToBytes_unittest() {
     // Create a temporary file with known content
-    const std::string tempFilePath = "temp_test_file.txt";
+    const std::filesystem::path tempFilePath = "temp_test_file.txt";
     const std::string fileContent = "Hello, World!";
     std::ofstream tempFile(tempFilePath);
     if (!tempFile) {
@@ -31,8 +31,10 @@ void readFileToBytes_unittest() {
     tempFile << fileContent;
     tempFile.close();
 
+    File* file = new File(tempFilePath);
+
     // Read the file using the utility function
-    std::vector<uint8_t> outputBytes = readFileToBytes(tempFilePath);
+    std::vector<uint8_t> outputBytes = *file->getContentBytes();
     
     // Expected byte vector (ASCII values of "Hello, World!")
     std::vector<uint8_t> expectedBytes = {0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21};
