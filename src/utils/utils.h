@@ -21,8 +21,9 @@ public:
     std::vector<uint8_t>* getContentBytes();
 
 private:
-    std::filesystem::path* input_path;
+    std::filesystem::path input_path;
     std::vector<uint8_t>* content_bytes;
+    std::filesystem::path getPathDialog();
     std::vector<uint8_t>* readFileToBytes(const std::filesystem::path &path);
     File* saveFileAs(const std::vector<uint8_t> &contentBytes, std::filesystem::path targetPath);
 
