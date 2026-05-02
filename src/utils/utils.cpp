@@ -1,37 +1,75 @@
 #include "utils.h"
 
-std::vector<uint8_t> readFileToBytes(const std::string &filePath)
+
+File::File(std::filesystem::path path)
 {
-        std::ifstream file(filePath, std::ios::binary);
+    if (!std::filesystem::exists(path)) {
+        throw std::runtime_error("File does not exist: " + path.string());
+    }
+
+    if (!std::filesystem::is_regular_file(path)) {
+        throw std::runtime_error("Path is not a regular file: " + path.string());
+    }
+    
+    input_path = path;
+
+}
+
+std::vector<uint8_t> *File::getContentBytes()
+{
+
+    if (content_bytes == nullptr and !input_path.empty()) {
+        content_bytes = File::readFileToBytes(input_path);
+    }
+
+    return new std::vector<uint8_t>(*content_bytes);
+}
+
+std::vector<uint8_t> *File::readFileToBytes(const std::filesystem::path &path)
+{
+    std::ifstream file(path, std::ios::binary);
     if (!file) {
-        throw std::runtime_error("Could not open file: " + filePath);
+        throw std::runtime_error("Could not open file: " + path.string());
     }
 
-    // Move the file pointer to the end
-    file.seekg(0, std::ios::end);
-    // Get the current position, which is the size of the file
-    std::streampos sp = file.tellg();
-    // Check if tellg() succeeded
-    if (sp == std::streampos(-1)) {
-        throw std::runtime_error("Failed to determine file size: " + filePath);
+    return new std::vector<uint8_t>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+}
+
+File::File()
+    : input_path(), content_bytes(nullptr)
+{
+}
+
+File::~File()
+{
+    if (content_bytes != nullptr) {
+        delete content_bytes;
+        content_bytes = nullptr;
+    }
+}
+
+File::File(std::filesystem::path path, std::vector<uint8_t> contentBytes)
+    : input_path(path), content_bytes(new std::vector<uint8_t>(contentBytes))
+{
+    // write content to the path
+    std::ofstream out(path, std::ios::binary);
+    if (!out) {
+        throw std::runtime_error("Could not open file for writing: " + path.string());
+    }
+    if (!contentBytes.empty()) {
+        out.write(reinterpret_cast<const char*>(contentBytes.data()), static_cast<std::streamsize>(contentBytes.size()));
+    }
+}
+
+File* File::saveFileAs(const std::vector<uint8_t> &contentBytes, std::filesystem::path targetPath)
+{
+    std::ofstream out(targetPath, std::ios::binary);
+    if (!out) {
+        throw std::runtime_error("Could not open file for writing: " + targetPath.string());
+    }
+    if (!contentBytes.empty()) {
+        out.write(reinterpret_cast<const char*>(contentBytes.data()), static_cast<std::streamsize>(contentBytes.size()));
     }
 
-    // Convert the position to a size_t for the vector allocation
-    std::size_t n = static_cast<std::size_t>(sp);
-    // Move the file pointer back to the beginning of the file
-    file.seekg(0, std::ios::beg);
-
-    // Initialize a vector with predetermined size
-    std::vector<uint8_t> bytes(n);
-    if (n > 0) {
-        // Read the file content into the vector in one go
-        file.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(n));
-        // Check how many bytes were actually read
-        std::streamsize actuallyRead = file.gcount();
-        if (actuallyRead < static_cast<std::streamsize>(n)) {
-            bytes.resize(static_cast<std::size_t>(actuallyRead));
-        }
-    }
-
-    return bytes;
+    return new File(targetPath, contentBytes);
 }
