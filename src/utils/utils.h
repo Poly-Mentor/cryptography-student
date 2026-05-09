@@ -11,7 +11,6 @@
 class File
 {
 public:
-    /** Interactive File constructor asking user for a path from which to read content */
     File();
 
     /** File constructor with path argument (content will be read) */
@@ -33,8 +32,6 @@ public:
 private:
     std::filesystem::path input_path;
     std::vector<uint8_t>* content_bytes;
-
-    std::filesystem::path getPathDialog();
 
     /** Reads a file to a vector of bytes 
      * @param path the path to the file to read
