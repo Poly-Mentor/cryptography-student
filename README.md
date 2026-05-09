@@ -52,6 +52,28 @@ int main() {
 }
 ```
 
+## MD5
+The MD5 implementation includes a function to compute the MD5 hash of a given input string or binary data in form of a vector of bytes. The algorithm processes the input in 512-bit blocks and produces a 128-bit hash value. The implementation follows the standard MD5 algorithm as defined in RFC 1321.
+
+MD5 class is stateless in a sense that it does not retain any information about the state of the algorithm after each operation. However it does maintain internal state during the computation of the hash, as it processes the input data in blocks and updates the hash value accordingly. Once the final hash is computed, the **internal state is reset** for the next computation. Due to this design, the MD5 class **is not static** - it requires an instance to be created.
+
+### Example usage
+
+```cpp
+// MD5 example
+#include <iostream>
+#include "md5/md5.h"
+
+int main() {
+	MD5 md5;
+	std::string input = "hello world";
+	auto hash = md5.calculate(&input);
+	std::cout << hash << std::endl;
+	return 0;
+}
+```
+
+
 ## AI usage disclosure
 
 Generative AI was used for:
