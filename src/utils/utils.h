@@ -13,7 +13,8 @@ class File
 public:
     File();
 
-    /** File constructor with path argument (content will be read) */
+    /** File constructor with path argument
+     * Content will be read if file exists, otherwise empty file will be created */
     File(std::filesystem::path path);
 
     /** File constructor with path and content (content will be written to path) */

@@ -5,10 +5,14 @@ File::File(std::filesystem::path path)
     : input_path(path), content_bytes(nullptr)
 {
     if (!std::filesystem::exists(path)) {
-        throw std::runtime_error("File does not exist: " + path.string());
+        
+        // If file doesn't exist, create an empty file at the path
+        std::ofstream out(path);
+        if (!out) {
+            throw std::runtime_error("Could not create file: " + path.string());
+        }
     }
-
-    if (!std::filesystem::is_regular_file(path)) {
+    else if (!std::filesystem::is_regular_file(path)) {
         throw std::runtime_error("Path is not a regular file: " + path.string());
     }
 }

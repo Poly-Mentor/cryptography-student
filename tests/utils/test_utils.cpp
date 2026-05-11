@@ -18,6 +18,32 @@ static void pass(const std::string &msg) {
     std::cout << "PASS: " << msg << "\n";
 }
 
+void initializing_File_with_nonexistent_path_creates_empty_file() {
+    const std::filesystem::path tempFilePath = "temp_nonexistent_file.txt";
+    
+    // Ensure the file doesn't exist before the test
+    if (std::filesystem::exists(tempFilePath)) {
+        std::filesystem::remove(tempFilePath);
+    }
+
+    // Initialize File object with a path that doesn't exist
+    File* file = new File(tempFilePath);
+
+    // Check if the file was created
+    if (!std::filesystem::exists(tempFilePath)) {
+        fail("Initializing File with non-existent path did not create a new file");
+    } else {
+        pass("Initializing File with non-existent path successfully created a new file");
+    }
+
+    // Clean up temporary file
+    if (std::filesystem::remove(tempFilePath)) {
+        std::cout << "\tCleaned up temporary file: " << tempFilePath << "\n";
+    } else {
+        std::cerr << "\tWarning: Failed to delete temporary file " << tempFilePath << "\n";
+    }
+}
+
 void readFileToBytes_unittest() {
     // Create a temporary file with known content
     const std::filesystem::path tempFilePath = "temp_test_file.txt";
@@ -32,7 +58,7 @@ void readFileToBytes_unittest() {
     File* file = new File(tempFilePath);
 
     // Read the file using the utility function
-    std::vector<uint8_t> outputBytes = *file->getContentBytes();
+    std::vector<uint8_t> outputBytes = file->getContentBytes();
     
     // Expected byte vector (ASCII values of "Hello, World!")
     std::vector<uint8_t> expectedBytes = {0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21};
@@ -96,7 +122,7 @@ void read_modify_save_test(){
     tempFile << fileContent;
     tempFile.close();
     File* file = new File(tempInputFilePath);
-    std::vector<uint8_t> initialOutputBytes = *file->getContentBytes();
+    std::vector<uint8_t> initialOutputBytes = file->getContentBytes();
 
     // Modify the byte vector
     std::vector<uint8_t> modifiedBytes = initialOutputBytes;
@@ -125,8 +151,9 @@ void read_modify_save_test(){
 }
 
 int main() {
+    initializing_File_with_nonexistent_path_creates_empty_file();
     readFileToBytes_unittest();
-    // saveFileAs_unittest();
-    // read_modify_save_test();
+    saveFileAs_unittest();
+    read_modify_save_test();
     return 0;
 }
