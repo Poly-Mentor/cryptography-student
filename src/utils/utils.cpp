@@ -2,6 +2,7 @@
 
 
 File::File(std::filesystem::path path)
+    : input_path(path), content_bytes(nullptr)
 {
     if (!std::filesystem::exists(path)) {
         throw std::runtime_error("File does not exist: " + path.string());
@@ -10,19 +11,16 @@ File::File(std::filesystem::path path)
     if (!std::filesystem::is_regular_file(path)) {
         throw std::runtime_error("Path is not a regular file: " + path.string());
     }
-    
-    input_path = path;
-
 }
 
-std::vector<uint8_t> *File::getContentBytes()
+const std::vector<uint8_t>& File::getContentBytes()
 {
-
-    if (content_bytes == nullptr and !input_path.empty()) {
+    // Lazy-load file content on first access and cache it
+    if (content_bytes == nullptr && !input_path.empty()) {
         content_bytes = File::readFileToBytes(input_path);
     }
 
-    return new std::vector<uint8_t>(*content_bytes);
+    return *content_bytes;
 }
 
 std::vector<uint8_t> *File::readFileToBytes(const std::filesystem::path &path)

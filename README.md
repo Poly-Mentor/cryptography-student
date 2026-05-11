@@ -8,6 +8,8 @@ C++ was chosen for this project as a balance between performance, control over m
 
 The project includes a simple command-line interface (CLI) tool that allows users to interact with the implemented algorithms. The CLI provides options to encrypt and decrypt text or files using Blowfish, generate RSA keys, encrypt and decrypt text/files using RSA, and compute MD5 hashes for text/file inputs.
 
+There is a possibility to use standard input and output for text and file content, which allows for flexible usage in various scenarios, such as piping data between commands or redirecting output to files.
+
 ```bash
 ./bin/cryptotool
 Usage: cryptotool ALGORITHM [ARGS]...
@@ -23,18 +25,20 @@ ARGS:
 	-d    --decrypt       decryption mode
 	-t    --text  TEXT    input text string
 	-f    --file  FILE    input file path
-	-o    --output FILE   output file path
+	-o    --output FILE   output file path (optional, if not specified, output will be printed to stdout)
 	-k    --key    KEY    key string for encryption/decryption
 	-kf   --key-file FILE text file containing key string for encryption/decryption 
 
   For rsa:
 	-l  --key-length N       key length in bits (only values from 9 to 48 bits are supported for educational purposes, not secure)
 	-gk --generate-keys  PATH  generate RSA key pair and save to specified path
+	-gk --generate-keys     (with no arguments) generate RSA key pair and output it to stdout
+
 	-e  --encrypt        	encryption mode
 	-d  --decrypt        	decryption mode
 	-t  --text   TEXT    	input text string
 	-f  --file   FILE    	input file path
-	-o  --output FILE    	output file path
+	-o  --output FILE    	output file path (optional, if not specified, output will be printed to stdout)
 	-pk --public-key FILE  text file containing public key for encryption
 	-sk --private-key FILE 	text file containing private key for decryption
 
@@ -92,13 +96,14 @@ Generate RSA key pair
 
 ```bash
 # Generate RSA key pair and save to current directory
-./bin/cryptotool rsa --generate-keys
+./bin/cryptotool rsa --generate-keys --output rsa_keys.txt
+
 
 # Key length can be specified between 9 and 48 bits (for educational purposes, not secure)
 ./bin/cryptotool rsa -gk -l 32
 
-# Generate RSA key pair and save to specified path
-./bin/cryptotool rsa -gk -o rsa_keys.txt
+# Generate RSA key pair and output to stdout
+./bin/cryptotool rsa -gk
 ```
 
 Encrypt plaintext using RSA public key

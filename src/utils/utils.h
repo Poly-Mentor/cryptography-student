@@ -22,8 +22,8 @@ public:
     /** Destructor performing cleanup */
     ~File();
 
-    /** Returns a copy of the file's content as a vector of bytes */
-    std::vector<uint8_t>* getContentBytes();
+    /** Returns a const reference to the file's content as a vector of bytes (lazy-loaded and cached) */
+    const std::vector<uint8_t>& getContentBytes();
 
     /** Saves a copy of the file's content to a new path 
      * @return a pointer to the new File object */
