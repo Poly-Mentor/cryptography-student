@@ -27,7 +27,7 @@ ARGS:
 	-f    --file  FILE    input file path
 	-o    --output FILE   output file path (optional, if not specified, output will be printed to stdout)
 	-k    --key    KEY    key string for encryption/decryption
-	-kf   --key-file FILE text file containing key string for encryption/decryption 
+	-K   --key-file FILE text file containing key string for encryption/decryption 
 
   For rsa:
 	-l  --key-length N       key length in bits (only values from 9 to 48 bits are supported for educational purposes, not secure)
@@ -39,8 +39,10 @@ ARGS:
 	-t  --text   TEXT    	input text string
 	-f  --file   FILE    	input file path
 	-o  --output FILE    	output file path (optional, if not specified, output will be printed to stdout)
-	-pk --public-key FILE  text file containing public key for encryption
-	-sk --private-key FILE 	text file containing private key for decryption
+	-p --public-key-string KEY  public key string for encryption
+	-s --private-key-string KEY private key string for decryption
+	-P --public-key FILE  text file path containing public key for encryption
+	-S --private-key FILE 	text file path containing private key for decryption
 
   For md5:
 	-f --file   FILE    	input file path
@@ -58,6 +60,8 @@ Generate ciphertext from plaintext
 ```bash
 # Encrypt "hello world" using Blowfish and output to stdout
 ./bin/cryptotool blowfish --encrypt --text "hello world" --key "my secret key"
+# or using path to key file
+./bin/cryptotool blowfish -e -t "hello world" -K key.txt
 
 # Encrypt "hello world" using Blowfish and save to ciphertext.txt
 ./bin/cryptotool blowfish -e -t "hello world" -k "my secret key" > ciphertext.txt
@@ -117,14 +121,14 @@ Encrypt a file using RSA public key
 
 ```bash
 # Encrypt image.png using RSA and save to ciphertext.bin
-./bin/cryptotool rsa -e -f image.png -pk rsa_keys.txt -o ciphertext.bin
+./bin/cryptotool rsa -e -f image.png -P rsa_keys.txt -o ciphertext.bin
 ```
 
 Decrypt a file using RSA private key
 
 ```bash
 # Decrypt ciphertext.bin using RSA and save to decrypted.png
-./bin/cryptotool rsa -d -f ciphertext.bin -sk rsa_keys.txt -o decrypted.png
+./bin/cryptotool rsa -d -f ciphertext.bin -S rsa_keys.txt -o decrypted.png
 ```
 
 
@@ -132,7 +136,7 @@ Decrypt ciphertext using RSA private key
 
 ```bash
 # Decrypt ciphertext.txt using RSA and output to stdout
-./bin/cryptotool rsa -d -f ciphertext.txt -sk rsa_keys.txt
+./bin/cryptotool rsa -d -f ciphertext.txt -S rsa_keys.txt
 ```
 
 #### MD5
