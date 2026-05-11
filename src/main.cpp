@@ -3,7 +3,12 @@
 #include <vector>
 #include <fstream>
 #include <stdexcept>
+
+#include "utils/utils.h"
+#include "utils/CLI11.hpp"
 #include "blowfish/blowfish.h"
+#include "rsa-small/rsa-small.h"
+#include "md5/md5.h"
 
 enum class CipherAlgorithm {
     Blowfish,

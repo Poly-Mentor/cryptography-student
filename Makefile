@@ -1,8 +1,8 @@
 build: build_blowfish build_rsa_small build_rsa_small build_md5 build_utils
-	g++ src/main.cpp bin/blowfish.o bin/arithmetics.o bin/rng.o bin/md5.o bin/utils.o -o bin/app
+	g++ src/main.cpp bin/blowfish.o bin/arithmetics.o bin/rng.o bin/md5.o bin/utils.o -o bin/cryptotool
 
 run: build
-	./bin/app
+	./bin/cryptotool
 
 build_blowfish:
 	g++ -c src/blowfish/blowfish.cpp -o bin/blowfish.o
