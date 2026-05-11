@@ -25,6 +25,9 @@ void blowfishTextDemo();
 
 int main(int argc, char* argv[]) {
 
+    CLI::App main_app{"Cryptography Student Tool - implementations of Blowfish, RSA, and MD5 for educational purposes with a simple CLI interface."};
+    CLI::App* blowfish_app = main_app.add_subcommand("blowfish", "Blowfish encryption and decryption");
+
     blowfishTextDemo();
 
     return 0;

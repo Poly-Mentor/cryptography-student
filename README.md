@@ -4,6 +4,156 @@ This repository contains solution of a task from school's *Cryptography* course:
 
 C++ was chosen for this project as a balance between performance, control over memory and ease of use. The implementations are designed to be educational and straightforward, rather than optimized for production use, therefore they are not secure, and should not be used in real applications.
 
+## CLI tool usage
+
+The project includes a simple command-line interface (CLI) tool that allows users to interact with the implemented algorithms. The CLI provides options to encrypt and decrypt text or files using Blowfish, generate RSA keys, encrypt and decrypt text/files using RSA, and compute MD5 hashes for text/file inputs.
+
+```bash
+./bin/cryptotool
+Usage: cryptotool ALGORITHM [ARGS]...
+
+ALGORITHM:
+  blowfish    Blowfish encryption and decryption
+  rsa         RSA encryption and decryption (small educational version)
+  md5         MD5 hashing
+
+ARGS:
+  For blowfish:
+	-e    --encrypt       encryption mode
+	-d    --decrypt       decryption mode
+	-t    --text  TEXT    input text string
+	-f    --file  FILE    input file path
+	-o    --output FILE   output file path
+	-k    --key    KEY    key string for encryption/decryption
+	-kf   --key-file FILE text file containing key string for encryption/decryption 
+
+  For rsa:
+	-l  --key-length N       key length in bits (only values from 9 to 48 bits are supported for educational purposes, not secure)
+	-gk --generate-keys  PATH  generate RSA key pair and save to specified path
+	-e  --encrypt        	encryption mode
+	-d  --decrypt        	decryption mode
+	-t  --text   TEXT    	input text string
+	-f  --file   FILE    	input file path
+	-o  --output FILE    	output file path
+	-pk --public-key FILE  text file containing public key for encryption
+	-sk --private-key FILE 	text file containing private key for decryption
+
+  For md5:
+	-f --file   FILE    	input file path
+	-t --text   TEXT    	input text string
+	-o --output FILE    	output file path (optional, if not specified, output will be printed to stdout)
+
+```
+
+### Examples
+
+#### Blowfish
+
+Generate ciphertext from plaintext 
+
+```bash
+# Encrypt "hello world" using Blowfish and output to stdout
+./bin/cryptotool blowfish --encrypt --text "hello world" --key "my secret key"
+
+# Encrypt "hello world" using Blowfish and save to ciphertext.txt
+./bin/cryptotool blowfish -e -t "hello world" -k "my secret key" > ciphertext.txt
+# or
+./bin/cryptotool blowfish -e -t "hello world" -k "my secret key" -o ciphertext.txt
+```
+
+Encrypt a file and save the ciphertext to another file
+
+```bash
+# Encrypt input.txt using Blowfish and save to ciphertext.bin
+./bin/cryptotool blowfish -e -f input.txt -k "my secret key" -o ciphertext.bin
+# of course, file can be any type, not just text
+./bin/cryptotool blowfish -e -f image.png -k "my secret key" -o image.enc
+```
+
+Decrypt the ciphertext back to plaintext
+
+```bash
+# Decrypt ciphertext.txt using Blowfish and output to stdout
+./bin/cryptotool blowfish --decrypt --file ciphertext.txt --key "my secret key"
+# Decrypt ciphertext.bin using Blowfish and save to decrypted.txt
+./bin/cryptotool blowfish -d -f ciphertext.bin -k "my secret key" -o decrypted.txt
+```
+
+Decrypting a file back to original
+
+```bash
+# Decrypt image.enc using Blowfish and save to image_dec.png
+./bin/cryptotool blowfish -d -f image.enc -k "my secret key" -o image_dec.png
+```
+
+#### RSA
+
+Generate RSA key pair
+
+```bash
+# Generate RSA key pair and save to current directory
+./bin/cryptotool rsa --generate-keys
+
+# Key length can be specified between 9 and 48 bits (for educational purposes, not secure)
+./bin/cryptotool rsa -gk -l 32
+
+# Generate RSA key pair and save to specified path
+./bin/cryptotool rsa -gk -o rsa_keys.txt
+```
+
+Encrypt plaintext using RSA public key
+
+```bash
+# Encrypt "hi" using RSA and save to ciphertext.txt
+./bin/cryptotool rsa --encrypt --text "hi" --public-key rsa_public_key.txt --output ciphertext.txt
+```
+
+Encrypt a file using RSA public key
+
+```bash
+# Encrypt image.png using RSA and save to ciphertext.bin
+./bin/cryptotool rsa -e -f image.png -pk rsa_keys.txt -o ciphertext.bin
+```
+
+Decrypt a file using RSA private key
+
+```bash
+# Decrypt ciphertext.bin using RSA and save to decrypted.png
+./bin/cryptotool rsa -d -f ciphertext.bin -sk rsa_keys.txt -o decrypted.png
+```
+
+
+Decrypt ciphertext using RSA private key
+
+```bash
+# Decrypt ciphertext.txt using RSA and output to stdout
+./bin/cryptotool rsa -d -f ciphertext.txt -sk rsa_keys.txt
+```
+
+#### MD5
+
+Compute MD5 hash of a text string. You must pass either a file path or a text string, but not both at the same time.
+
+```bash
+# Compute MD5 hash of "hello world" and output to stdout
+./bin/cryptotool md5 --text "hello world"
+```
+
+Compute MD5 hash of a file
+
+```bash
+# Compute MD5 hash of input.txt and output to stdout
+./bin/cryptotool md5 --file input.txt
+
+# Compute MD5 hash of image.png and output to a file
+./bin/cryptotool md5 --file image.png --output image_md5.txt
+# or
+.bin/cryptotool md5 -f image.png > image_md5.txt
+```
+
+
+# Implementation
+
 ## Blowfish
 
 The Blowfish implementation is based on the original algorithm description by Bruce Schneier. It includes key expansion and encryption/decryption functions. The key expansion initializes the P-array and S-boxes using the provided key, while the encryption and decryption functions perform the actual data transformation.
