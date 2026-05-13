@@ -9,6 +9,7 @@ import tempfile
 import os
 import re
 import sys
+import hashlib
 
 # Path to the CLI binary we will test
 CRYPTOTOOL = "./bin/cryptotool"
@@ -39,7 +40,7 @@ def ensure_executable(path):
     return True
 
 
-def text_roundtrip():
+def blowfish_text_roundtrip():
     print("=== Blowfish text roundtrip ===")
     # Encrypt a literal string
     enc = run_cmd([CRYPTOTOOL, "blowfish", "-e", "-t", "hello world", "-k", "password"]).strip()
@@ -60,7 +61,7 @@ def text_roundtrip():
     print("Text roundtrip OK")
 
 
-def file_roundtrip():
+def blowfish_file_roundtrip():
     print("=== Blowfish file roundtrip ===")
 
     # Create temporary files. delete=False so we can pass filenames to subprocess.
@@ -107,7 +108,7 @@ def file_roundtrip():
                 pass
 
 
-def text_roundtrip_keyfile():
+def blowfish_text_roundtrip_keyfile():
     """Encrypt/decrypt using a key supplied via a temporary key file (-K)."""
     print("=== Blowfish text roundtrip (key file) ===")
     # Create a temporary key file containing the password text
@@ -138,7 +139,7 @@ def text_roundtrip_keyfile():
             pass
 
 
-def file_roundtrip_keyfile():
+def blowfish_file_roundtrip_keyfile():
     """Encrypt/decrypt files using a key supplied via a temporary key file (-K)."""
     print("=== Blowfish file roundtrip (key file) ===")
     # Prepare temp files: input, encrypted, decrypted, and key file
@@ -178,15 +179,87 @@ def file_roundtrip_keyfile():
                 pass
 
 
+def md5_text():
+    """Compute MD5 of a literal string via the CLI and compare to Python's hashlib."""
+    print("=== MD5 text ===")
+    out = run_cmd([CRYPTOTOOL, "md5", "-t", "hello world"]).strip()
+    expected = hashlib.md5(b"hello world").hexdigest()
+    if out.strip() != expected:
+        print("MD5 text mismatch", file=sys.stderr)
+        print("cli:", out)
+        print("py :", expected)
+        sys.exit(1)
+    print("MD5 text OK")
+
+
+def md5_file():
+    """Compute MD5 of a temporary file via the CLI and compare to hashlib."""
+    print("=== MD5 file ===")
+    f = tempfile.NamedTemporaryFile(delete=False)
+    path = f.name
+    try:
+        f.write(b"hello world")
+        f.close()
+        out = run_cmd([CRYPTOTOOL, "md5", "-f", path]).strip()
+        with open(path, "rb") as fh:
+            expected = hashlib.md5(fh.read()).hexdigest()
+        if out.strip() != expected:
+            print("MD5 file mismatch", file=sys.stderr)
+            print("cli:", out)
+            print("py :", expected)
+            sys.exit(1)
+        print("MD5 file OK")
+    finally:
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+
+
+def md5_file_output():
+    """Run CLI with -f and -o to write hash to an output file and verify contents."""
+    print("=== MD5 file output ===")
+    in_f = tempfile.NamedTemporaryFile(delete=False)
+    in_path = in_f.name
+    in_f.write(b"hello world")
+    in_f.close()
+
+    out_f = tempfile.NamedTemporaryFile(delete=False)
+    out_path = out_f.name
+    out_f.close()
+
+    try:
+        run_cmd([CRYPTOTOOL, "md5", "-f", in_path, "-o", out_path])
+        with open(in_path, "rb") as fh:
+            expected = hashlib.md5(fh.read()).hexdigest()
+        with open(out_path, "r") as of:
+            got = of.read().strip()
+        if got != expected:
+            print("MD5 file output mismatch", file=sys.stderr)
+            print("file:", got)
+            print("exp :", expected)
+            sys.exit(1)
+        print("MD5 file output OK")
+    finally:
+        for p in (in_path, out_path):
+            try:
+                os.remove(p)
+            except Exception:
+                pass
+
+
 def main():
     if not ensure_executable(CRYPTOTOOL):
         return 2
 
-    text_roundtrip()
-    file_roundtrip()
-    # Additional tests using a key file instead of inline -k
-    text_roundtrip_keyfile()
-    file_roundtrip_keyfile()
+    blowfish_text_roundtrip()
+    blowfish_file_roundtrip()
+    blowfish_text_roundtrip_keyfile()
+    blowfish_file_roundtrip_keyfile()
+
+    md5_text()
+    md5_file()
+    md5_file_output()
 
     print("All tests passed")
     return 0
