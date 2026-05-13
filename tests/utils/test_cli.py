@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
 """
-Beginner-friendly Python test script for `./bin/cryptotool`.
-
-This script mirrors the bash test and uses `subprocess.run` so the flow
-is easier to follow for Python newcomers.
-
-It performs two checks:
-  1) Text roundtrip: encrypt a short string and ensure decrypt returns the original.
-  2) File roundtrip: encrypt a temporary file and ensure decrypted file matches.
-
-Usage:
-  python3 tests/utils/test_cli.py
-
-Requirements:
-  - The CLI binary must exist at `./bin/cryptotool` and be executable.
+Python test script for `./bin/cryptotool`.
+This script mirrors the bash test and uses `subprocess.run`.
 """
 
 import subprocess
@@ -119,12 +107,86 @@ def file_roundtrip():
                 pass
 
 
+def text_roundtrip_keyfile():
+    """Encrypt/decrypt using a key supplied via a temporary key file (-K)."""
+    print("=== Blowfish text roundtrip (key file) ===")
+    # Create a temporary key file containing the password text
+    kf = tempfile.NamedTemporaryFile(delete=False)
+    key_path = kf.name
+    try:
+        kf.write(b"password")
+        kf.close()
+
+        enc = run_cmd([CRYPTOTOOL, "blowfish", "-e", "-t", "hello world", "-K", key_path]).strip()
+        enc = enc.strip()
+
+        if not re.fullmatch(r"[0-9a-fA-F]+", enc):
+            print(f"Encryption output not hex: '{enc}'", file=sys.stderr)
+            sys.exit(1)
+
+        dec = run_cmd([CRYPTOTOOL, "blowfish", "-d", "-t", enc, "-K", key_path])
+        if "hello world" not in dec:
+            print("Decryption with key file failed or unexpected output:")
+            print(dec)
+            sys.exit(1)
+
+        print("Text roundtrip with key file OK")
+    finally:
+        try:
+            os.remove(key_path)
+        except Exception:
+            pass
+
+
+def file_roundtrip_keyfile():
+    """Encrypt/decrypt files using a key supplied via a temporary key file (-K)."""
+    print("=== Blowfish file roundtrip (key file) ===")
+    # Prepare temp files: input, encrypted, decrypted, and key file
+    in_f = tempfile.NamedTemporaryFile(delete=False)
+    in_path = in_f.name
+    in_f.write(b"hello world")
+    in_f.close()
+
+    enc_f = tempfile.NamedTemporaryFile(delete=False)
+    enc_path = enc_f.name
+    enc_f.close()
+
+    dec_f = tempfile.NamedTemporaryFile(delete=False)
+    dec_path = dec_f.name
+    dec_f.close()
+
+    kf = tempfile.NamedTemporaryFile(delete=False)
+    key_path = kf.name
+    try:
+        kf.write(b"password")
+        kf.close()
+
+        run_cmd([CRYPTOTOOL, "blowfish", "-e", "-f", in_path, "-K", key_path, "-o", enc_path])
+        run_cmd([CRYPTOTOOL, "blowfish", "-d", "-f", enc_path, "-K", key_path, "-o", dec_path])
+
+        with open(in_path, "rb") as a, open(dec_path, "rb") as b:
+            if a.read() != b.read():
+                print("File roundtrip (key file) mismatch", file=sys.stderr)
+                sys.exit(1)
+
+        print("File roundtrip with key file OK")
+    finally:
+        for p in (in_path, enc_path, dec_path, key_path):
+            try:
+                os.remove(p)
+            except Exception:
+                pass
+
+
 def main():
     if not ensure_executable(CRYPTOTOOL):
         return 2
 
     text_roundtrip()
     file_roundtrip()
+    # Additional tests using a key file instead of inline -k
+    text_roundtrip_keyfile()
+    file_roundtrip_keyfile()
 
     print("All tests passed")
     return 0
