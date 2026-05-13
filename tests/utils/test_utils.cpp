@@ -106,6 +106,11 @@ void saveFileAs_unittest() {
             fail("saveFileAs output mismatch at index " + std::to_string(i), std::to_string(readBytes[i]), std::to_string(contentBytes[i]));
         }
     }
+
+    // Clean up temporary file
+    if (std::remove(targetFilePath.c_str()) != 0) {
+        std::cerr << "Warning: Failed to delete temporary file " << targetFilePath << "\n";
+    }
     
     pass("saveFileAs correctly writes byte vector to file");
 }
@@ -147,6 +152,15 @@ void read_modify_save_test(){
             fail("Modified file output mismatch at index " + std::to_string(i), std::to_string(readBytes[i]), std::to_string(modifiedBytes[i]));
         }
     }
+
+    // Clean up temporary files
+    if (std::remove(tempInputFilePath.c_str()) != 0) {
+        std::cerr << "Warning: Failed to delete temporary input file " << tempInputFilePath << "\n";
+    }
+    if (std::remove(tempOutputFilePath.c_str()) != 0) {
+        std::cerr << "Warning: Failed to delete temporary output file " << tempOutputFilePath << "\n";
+    }
+
     pass("Read-modify-save test passed successfully");
 }
 
