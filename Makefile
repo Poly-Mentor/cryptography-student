@@ -53,7 +53,13 @@ build_tests: build_blowfish_test build_rsa_small_tests build_md5_test build_util
 	
 
 run_tests: build_tests
-	./bin/test_*
+	./bin/test_arithmetics
+	./bin/test_rng
+	./bin/test_rsa-small
+	./bin/test_blowfish
+	./bin/test_md5
+	./bin/test_utils
+	python tests/utils/test_cli.py
 
 clean:
 	rm -rf bin/*
