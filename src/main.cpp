@@ -133,8 +133,8 @@ int main(int argc, char* argv[]) {
     auto* blowfish_key_group = blowfish_app->add_option_group("key", "Blowfish key input (choose one)");
     std::string blowfish_key;
     std::filesystem::path blowfish_key_path;
-    auto* blowfish_key_option = blowfish_key_group->add_option("-k,--key", blowfish_key, "Blowfish key as a string (9-48 bytes)")->expected(1);
-    auto* blowfish_key_file_option = blowfish_key_group->add_option("-K,--key-file", blowfish_key_path, "Path to file containing Blowfish key (9-48 bytes)")->check(CLI::ExistingFile)->expected(1);
+    auto* blowfish_key_option = blowfish_key_group->add_option("-k,--key", blowfish_key, "Blowfish key as a string")->expected(1);
+    auto* blowfish_key_file_option = blowfish_key_group->add_option("-K,--key-file", blowfish_key_path, "Path to file containing Blowfish key")->check(CLI::ExistingFile)->expected(1);
 
     blowfish_key_option->excludes(blowfish_key_file_option);
     blowfish_key_file_option->excludes(blowfish_key_option);
@@ -210,9 +210,8 @@ int main(int argc, char* argv[]) {
                     output_file->saveFileAs(encryptedBytes, blowfish_output_file_path);
                     std::cout << "Encrypted data written to: " << blowfish_output_file_path << std::endl;
                 } else {
-                    std::cout << "Encrypted bytes: ";
                     for (uint8_t b : encryptedBytes) {
-                        std::cout << std::hex << static_cast<int>(b) << " ";
+                        std::cout << std::hex << static_cast<int>(b);
                     }
                     std::cout << std::dec << std::endl;
                 }
@@ -231,9 +230,8 @@ int main(int argc, char* argv[]) {
                         output_file->saveFileAs(encryptedBytes, blowfish_output_file_path);
                         std::cout << "Encrypted data written to: " << blowfish_output_file_path << std::endl;
                     } else {
-                        std::cout << "Encrypted bytes: ";
                         for (uint8_t b : encryptedBytes) {
-                            std::cout << std::hex << static_cast<int>(b) << " ";
+                            std::cout << std::hex << static_cast<int>(b);
                         }
                         std::cout << std::dec << std::endl;
                     }
