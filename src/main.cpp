@@ -18,7 +18,8 @@ enum class CipherAlgorithm {
 
 enum class CipherMode {
     ENCRYPT,
-    DECRYPT
+    DECRYPT,
+    GENERATE_KEYS
 };
 
 void blowfishTextDemo();
@@ -153,6 +154,10 @@ int main(int argc, char* argv[]) {
     blowfish_app->add_option("-o,--output", blowfish_output_file_path, "Output file path for encrypted/decrypted result (optional, prints to stdout if not provided)")->expected(0, 1);
 
     blowfish_app->callback([&blowfish_mode, &blowfish_input_text, &blowfish_input_file, &blowfish_output_file_path, &blowfish_key, &blowfish_key_path, verbose]() {
+
+        if (blowfish_mode != CipherMode::ENCRYPT && blowfish_mode != CipherMode::DECRYPT) {
+            throw CLI::ValidationError("blowfish", "You must specify either --encrypt or --decrypt mode");
+        }
 
         // Setup key
         if (!blowfish_key.empty() && !blowfish_key_path.empty()) {
@@ -294,6 +299,136 @@ int main(int argc, char* argv[]) {
         }
     });
 
+
+    // RSA config
+
+    auto * rsa_mode_group = rsa_app->add_option_group("mode", "RSA operation mode (encrypt, decrypt, or keygen)");
+
+    CipherMode rsa_mode;
+
+    auto * rsa_keygen_flag = rsa_mode_group->add_flag_callback("-g,--generate-keys", [&rsa_mode, verbose]() {
+        
+        if (verbose)
+            std::cout << "RSA key generation mode selected" << std::endl;
+        rsa_mode = CipherMode::GENERATE_KEYS;
+    }
+    , "Generate RSA key pair");
+
+    auto * rsa_encrypt_flag = rsa_mode_group->add_flag_callback("-e,--encrypt", [&rsa_mode, verbose]() {
+        
+        if (verbose)
+            std::cout << "RSA encryption mode selected" << std::endl;
+        rsa_mode = CipherMode::ENCRYPT;
+    }
+    , "Encrypt mode");
+
+    auto * rsa_decrypt_flag = rsa_mode_group->add_flag_callback("-d,--decrypt", [&rsa_mode, verbose]() {
+        
+        if (verbose)
+            std::cout << "RSA decryption mode selected" << std::endl;
+        rsa_mode = CipherMode::DECRYPT;
+    }
+    , "Decrypt mode");
+
+    rsa_decrypt_flag->excludes(rsa_encrypt_flag, rsa_keygen_flag);
+    rsa_encrypt_flag->excludes(rsa_decrypt_flag, rsa_keygen_flag);
+    rsa_keygen_flag->excludes(rsa_encrypt_flag, rsa_decrypt_flag);
+
+    int key_length;
+    auto * rsa_key_length_option = rsa_app->add_option("-l,--key-length", key_length, "Key length in bits (must be between 9 and 48 for educational purposes)")
+        ->check(CLI::Range(9, 48))
+        ->expected(1);
+    
+    rsa_key_length_option->excludes(rsa_encrypt_flag, rsa_decrypt_flag); // Key length option is only relevant for key generation mode, so we exclude it from encrypt/decrypt modes
+
+    auto * rsa_input_group = rsa_app->add_option_group("input", "Input source for RSA (choose one)");
+    std::string rsa_input_text;
+    std::filesystem::path rsa_input_file;
+    auto * rsa_text_option = rsa_input_group->add_option("-t,--text", rsa_input_text, "Input text string for encryption/decryption");
+    auto * rsa_file_option = rsa_input_group->add_option("-f,--file", rsa_input_file, "Input file path for encryption/decryption")->check(CLI::ExistingFile);
+
+    rsa_text_option->excludes(rsa_file_option);
+    rsa_file_option->excludes(rsa_text_option);
+
+    std::string rsa_public_key, rsa_private_key;
+    std::filesystem::path rsa_public_key_file, rsa_private_key_file;
+
+    auto * rsa_public_key_option = rsa_app->add_option("-p,--public-key", rsa_public_key, "RSA public key as a string");
+    auto * rsa_private_key_option = rsa_app->add_option("-s,--private-key", rsa_private_key, "RSA private key as a string");
+    auto * rsa_public_key_file_option = rsa_app->add_option("-P,--public-key-file", rsa_public_key_file, "Path to file containing RSA public key")->check(CLI::ExistingFile);
+    auto * rsa_private_key_file_option = rsa_app->add_option("-S,--private-key-file", rsa_private_key_file, "Path to file containing RSA private key")->check(CLI::ExistingFile);
+
+    rsa_public_key_option->excludes(rsa_public_key_file_option);
+    rsa_public_key_file_option->excludes(rsa_public_key_option);
+    rsa_private_key_option->excludes(rsa_private_key_file_option);
+    rsa_private_key_file_option->excludes(rsa_private_key_option);
+
+    std::filesystem::path rsa_output_file_path;
+    auto * rsa_output_file_option = rsa_app->add_option("-o,--output", rsa_output_file_path, "Output file path for encrypted/decrypted result or key files (optional, prints to stdout if not provided)")->expected(0, 1);
+
+    rsa_app->callback([&rsa_mode, &rsa_key_length_option, &rsa_input_text, &rsa_input_file, &rsa_public_key, &rsa_private_key, &rsa_public_key_file, &rsa_private_key_file, &rsa_output_file_path, key_length, verbose]() {
+        
+        if (rsa_mode == CipherMode::GENERATE_KEYS) {
+            if (verbose)
+                std::cout << "Generating RSA key pair with key length: " << key_length << " bits" << std::endl;
+
+            keyPair keys;
+            
+            try {
+                keys = RSA::generate_keys(static_cast<uint8_t>(key_length));
+            } catch (const std::exception& e) {
+                throw CLI::ValidationError("rsa", std::string("Error generating RSA keys: ") + e.what());
+            }
+
+
+            if (not rsa_output_file_path.empty()) {
+
+                std::filesystem::path output_dir;
+
+                if (std::filesystem::is_regular_file(rsa_output_file_path)) {
+                    
+                    rsa_output_file_path.replace_filename("public_key.txt");
+                    output_dir = rsa_output_file_path.parent_path();
+
+                    if (verbose)
+                        std::cout << "Output path is a file, keys will be written to directory:" << output_dir << std::endl;
+                }
+                else if (std::filesystem::is_directory(rsa_output_file_path)) {
+                    output_dir = rsa_output_file_path;
+                }
+                else {
+                    throw CLI::ValidationError("rsa", "Output path must be a valid directory");
+                }
+
+                std::filesystem::path public_key_path = output_dir / "public_key.txt";
+                std::filesystem::path private_key_path = output_dir / "private_key.txt";
+
+                if (std::filesystem::exists(public_key_path) || std::filesystem::exists(private_key_path)) {
+                    throw CLI::ValidationError("rsa", "Output files already exist in " + output_dir.string() + ", please choose a different output directory or remove existing key files");
+                }
+
+                try {
+                    File public_key_file(public_key_path, RSA::keyToString(keys.publicKey));
+                    File private_key_file(private_key_path, RSA::keyToString(keys.privateKey));
+                    std::cout << "RSA keys written to: " << output_dir << std::endl;
+                } catch (const std::exception& e) {
+                    throw CLI::ValidationError("rsa", std::string("Error writing RSA keys to file: ") + e.what());
+                }
+            }
+            
+            else
+            {
+                std::string public_key_str = RSA::keyToString(keys.publicKey);
+                std::string private_key_str = RSA::keyToString(keys.privateKey);
+
+                std::cout << "Public Key: " << public_key_str << std::endl;
+                std::cout << "Private Key: " << private_key_str << std::endl;
+            }
+            
+        }
+
+        // TODO: decrypt and encrypt
+    });
 
     CLI11_PARSE(main_app, argc, argv);
 

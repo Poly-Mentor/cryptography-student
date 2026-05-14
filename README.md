@@ -31,11 +31,11 @@ ARGS:
 
   For rsa:
 	-l  --key-length N       key length in bits (only values from 9 to 48 bits are supported for educational purposes, not secure)
-	-gk --generate-keys  PATH  generate RSA key pair and save to specified path
-	-gk --generate-keys     (with no arguments) generate RSA key pair and output it to stdout
 
 	-e  --encrypt        	encryption mode
 	-d  --decrypt        	decryption mode
+	-g  --generate-keys     generate RSA key pair
+
 	-t  --text   TEXT    	input text string
 	-f  --file   FILE    	input file path
 	-o  --output FILE    	output file path (optional, if not specified, output will be printed to stdout)

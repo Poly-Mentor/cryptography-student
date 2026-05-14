@@ -20,6 +20,9 @@ public:
     /** File constructor with path and content (content will be written to path) */
     File(std::filesystem::path path, std::vector<uint8_t> contentBytes);
 
+        /** File constructor with path and content (content will be written to path) */
+    File(std::filesystem::path path, std::string content); // TODO
+
     /** Destructor performing cleanup */
     ~File();
 
