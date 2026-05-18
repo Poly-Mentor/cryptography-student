@@ -45,7 +45,7 @@ public:
     static std::string decryptText(const std::vector<uint64_t>& ciphertext, const key& privateKey);
 
     static std::string keyToString(const key& keys); // TODO
-    static key stringToKeys(const std::string& keysStr); // TODO
+    static key stringToKey(const std::string& keysStr); // TODO
 
 private:
     /**
