@@ -366,7 +366,7 @@ int main(int argc, char* argv[]) {
     std::filesystem::path rsa_output_file_path;
     auto * rsa_output_file_option = rsa_app->add_option("-o,--output", rsa_output_file_path, "Output file path for encrypted/decrypted result or key files (optional, prints to stdout if not provided)")->expected(0, 1);
 
-    rsa_app->callback([&rsa_mode, &rsa_key_length_option, &rsa_input_text, &rsa_input_file, &rsa_public_key, &rsa_private_key, &rsa_public_key_file, &rsa_private_key_file, &rsa_output_file_path, key_length, verbose]() {
+    rsa_app->callback([&rsa_mode, &rsa_key_length_option, &rsa_input_text, &rsa_input_file, &rsa_public_key, &rsa_private_key, &rsa_public_key_file, &rsa_private_key_file, &rsa_output_file_path, &key_length, &verbose]() {
         
         if (rsa_mode == CipherMode::GENERATE_KEYS) {
             if (verbose)
@@ -428,6 +428,176 @@ int main(int argc, char* argv[]) {
         }
 
         // TODO: decrypt and encrypt
+
+        else if (rsa_mode == CipherMode::ENCRYPT)
+        {
+            if (verbose)
+                std::cout << "RSA encryption mode selected" << std::endl;
+            
+            if (rsa_public_key.empty() and rsa_public_key_file.empty()) {
+                throw CLI::ValidationError("rsa", "You must provide a public key for encryption using either --public-key or --public-key-file");
+            }
+
+            
+            key encryption_key;
+
+            if (rsa_public_key.empty() and not rsa_public_key_file.empty()) {
+                try {
+                    File public_key_file(rsa_public_key_file);
+                    const std::vector<uint8_t>& key_content = public_key_file.getContentBytes();
+                    rsa_public_key = std::string(key_content.begin(), key_content.end());
+                    if (verbose)
+                        std::cout << "Using RSA public key from file: " << rsa_public_key_file << std::endl;
+                } catch (const std::exception& e) {
+                    throw CLI::ValidationError("rsa", std::string("Error reading public key file: ") + e.what());
+                }
+            } else {
+                if (verbose)
+                    std::cout << "Using RSA public key from command line input" << std::endl;
+            }
+
+            encryption_key = RSA::stringToKey(rsa_public_key);
+
+            std::vector<uint64_t> encrypted_data;
+
+            if (not rsa_input_text.empty()) {
+                if (verbose)
+                    std::cout << "Encrypting input text: " << rsa_input_text << std::endl;
+                encrypted_data = RSA::encryptText(rsa_input_text, encryption_key);
+            }
+            else if (not rsa_input_file.empty()) {
+
+                if (verbose)
+                    std::cout << "Encrypting input file: " << rsa_input_file << std::endl;
+                try {
+                    File input_file(rsa_input_file);
+                    const std::vector<uint8_t>& file_content = input_file.getContentBytes();
+                    encrypted_data = RSA::encrypt(file_content, encryption_key);
+                } catch (const std::exception& e) {
+                    throw CLI::ValidationError("rsa", std::string("Error processing input file: ") + e.what());
+                }
+            }
+            else {
+                throw CLI::ValidationError("rsa", "You must provide input data to encrypt using either --text or --file");
+            }
+
+            if (not rsa_output_file_path.empty()) {
+                try {
+                    std::vector<uint8_t> encrypted_bytes;
+                    for (uint64_t block : encrypted_data) {
+                        // Convert each 64-bit block to 8 bytes and append to the byte vector
+                        for (int i = 7; i >= 0; --i) {
+                            encrypted_bytes.push_back(static_cast<uint8_t>((block >> (i * 8)) & 0xFF));
+                        }
+                    }
+                    File output_file(rsa_output_file_path, encrypted_bytes);
+                    std::cout << "Encrypted data written to: " << rsa_output_file_path << std::endl;
+                } catch (const std::exception& e) {
+                    throw CLI::ValidationError("rsa", std::string("Error writing encrypted data to file: ") + e.what());
+                }
+            } else {
+                if (verbose)
+                    std::cout << "Encrypted data (hex): ";
+
+                for (uint64_t block : encrypted_data) {
+                    std::cout << std::hex << block << " ";
+                }
+                std::cout << std::dec << std::endl;
+            }
+        }
+        
+        else if (rsa_mode == CipherMode::DECRYPT)
+        {
+            if (verbose)
+                std::cout << "RSA decryption mode selected" << std::endl;
+            
+            if (rsa_private_key.empty() and rsa_private_key_file.empty()) {
+                throw CLI::ValidationError("rsa", "You must provide a private key for decryption using either --private-key or --private-key-file");
+            }
+
+            
+            key decryption_key;
+
+            if (rsa_private_key.empty() and not rsa_private_key_file.empty()) {
+                try {
+                    File private_key_file(rsa_private_key_file);
+                    const std::vector<uint8_t>& key_content = private_key_file.getContentBytes();
+                    rsa_private_key = std::string(key_content.begin(), key_content.end());
+                    if (verbose)
+                        std::cout << "Using RSA private key from file: " << rsa_private_key_file << std::endl;
+                } catch (const std::exception& e) {
+                    throw CLI::ValidationError("rsa", std::string("Error reading private key file: ") + e.what());
+                }
+            } else {
+                if (verbose)
+                    std::cout << "Using RSA private key from command line input" << std::endl;
+            }
+
+            decryption_key = RSA::stringToKey(rsa_private_key);
+
+            std::vector<uint64_t> encrypted_data;
+
+            if (not rsa_input_text.empty()) {
+                if (verbose)
+                    std::cout << "Decrypting input text: " << rsa_input_text << std::endl;
+
+                // For decryption, we expect the input text to be a hex string representing the encrypted data blocks
+                // We need to convert the hex string back to a vector of uint64_t blocks before decrypting
+                std::vector<uint64_t> hex_blocks;
+                std::stringstream ss(rsa_input_text);
+                uint64_t block;
+                while (ss >> std::hex >> block) {
+                    hex_blocks.push_back(block);
+                }
+                encrypted_data = hex_blocks;
+            }
+            else if (not rsa_input_file.empty()) {
+
+                if (verbose)
+                    std::cout << "Decrypting input file: " << rsa_input_file << std::endl;
+                try {
+                    File input_file(rsa_input_file);
+                    const std::vector<uint8_t>& file_content = input_file.getContentBytes();
+
+                    // We need to convert the byte content back to a vector of uint64_t blocks before decrypting
+                    std::vector<uint64_t> encrypted_blocks;
+                    for (size_t i = 0; i < file_content.size(); i += 8) {
+                        uint64_t block = 0;
+                        for (size_t j = 0; j < 8 && (i + j) < file_content.size(); ++j) {
+                            block = (block << 8) | file_content[i + j];
+                        }
+                        encrypted_blocks.push_back(block);
+                    }
+                    encrypted_data = encrypted_blocks;
+                } catch (const std::exception& e) {
+                    throw CLI::ValidationError("rsa", std::string("Error processing input file: ") + e.what());
+                }
+            }
+            else {
+                throw CLI::ValidationError("rsa", "You must provide input data to decrypt using either --text or --file");
+            }
+
+            std::string decrypted_text;
+            try {
+                decrypted_text = RSA::decryptText(encrypted_data, decryption_key);
+            } catch (const std::exception& e) {
+                throw CLI::ValidationError("rsa", std::string("Error during decryption: ") + e.what());
+            }
+
+            if (not rsa_output_file_path.empty()) {
+                try {
+                    std::vector<uint8_t> decrypted_bytes(decrypted_text.begin(), decrypted_text.end());
+                    File output_file(rsa_output_file_path, decrypted_bytes);
+                    std::cout << "Decrypted data written to: " << rsa_output_file_path << std::endl;
+                } catch (const std::exception& e) {
+                    throw CLI::ValidationError("rsa", std::string("Error writing decrypted data to file: ") + e.what());
+                }
+            } else {
+                std::cout << "Decrypted text: " << decrypted_text << std::endl;
+            }
+
+        }
+
     });
 
     CLI11_PARSE(main_app, argc, argv);
