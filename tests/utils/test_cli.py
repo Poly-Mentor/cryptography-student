@@ -247,6 +247,77 @@ def md5_file_output():
             except Exception:
                 pass
 
+def test_rsa():
+    """Test key generation functionality."""
+    
+    print("=== RSA generate/encrypt/decrypt ===")
+
+    # Generate keys into a temporary directory
+    out_dir = tempfile.TemporaryDirectory()
+    out_path = out_dir.name
+    try:
+        run_cmd([CRYPTOTOOL, "rsa", "--generate-keys", "-l", "16", "-o", out_path])
+
+        pub_path = os.path.join(out_path, "public_key.txt")
+        priv_path = os.path.join(out_path, "private_key.txt")
+
+        if not os.path.isfile(pub_path) or not os.path.isfile(priv_path):
+            print("Key files missing after generation", file=sys.stderr)
+            sys.exit(1)
+
+        with open(pub_path, "r") as pf:
+            pub = pf.read().strip()
+        with open(priv_path, "r") as sf:
+            priv = sf.read().strip()
+
+        # Encrypt a small text using the public key string
+        enc = run_cmd([CRYPTOTOOL, "rsa", "-e", "-t", "hello", "-p", pub]).strip()
+
+        # Expect hex blocks (space separated) or single hex value
+        if not re.fullmatch(r"([0-9a-fA-F]+( [0-9a-fA-F]+)*)", enc):
+            print("Encryption output not hex blocks:", file=sys.stderr)
+            print(enc, file=sys.stderr)
+            sys.exit(1)
+
+        # Decrypt the produced hex string using the private key string
+        dec = run_cmd([CRYPTOTOOL, "rsa", "-d", "-t", enc, "-s", priv])
+        if "hello" not in dec:
+            print("Decryption failed or unexpected output:", file=sys.stderr)
+            print(dec, file=sys.stderr)
+            sys.exit(1)
+
+        # Now test file encryption/decryption using key files (-P and -S)
+        in_f = tempfile.NamedTemporaryFile(delete=False)
+        in_path = in_f.name
+        in_f.write(b"hello file")
+        in_f.close()
+
+        enc_f = tempfile.NamedTemporaryFile(delete=False)
+        enc_path = enc_f.name
+        enc_f.close()
+
+        dec_f = tempfile.NamedTemporaryFile(delete=False)
+        dec_path = dec_f.name
+        dec_f.close()
+
+        try:
+            run_cmd([CRYPTOTOOL, "rsa", "-e", "-f", in_path, "-P", pub_path, "-o", enc_path])
+            run_cmd([CRYPTOTOOL, "rsa", "-d", "-f", enc_path, "-S", priv_path, "-o", dec_path])
+
+            with open(in_path, "rb") as a, open(dec_path, "rb") as b:
+                if a.read() != b.read():
+                    print("File roundtrip mismatch", file=sys.stderr)
+                    sys.exit(1)
+        finally:
+            for p in (in_path, enc_path, dec_path):
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
+
+        print("RSA CLI OK")
+    finally:
+        out_dir.cleanup()
 
 def main():
     if not ensure_executable(CRYPTOTOOL):
@@ -260,6 +331,8 @@ def main():
     md5_text()
     md5_file()
     md5_file_output()
+
+    test_rsa()
 
     print("All tests passed")
     return 0
