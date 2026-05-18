@@ -63,6 +63,21 @@ File::File(std::filesystem::path path, std::vector<uint8_t> contentBytes)
     }
 }
 
+File::File(std::filesystem::path path, std::string content)
+    : input_path(path), content_bytes(nullptr)
+{
+    // write string content to the path
+    std::ofstream out(path, std::ios::binary);
+    if (!out) {
+        throw std::runtime_error("Could not open file for writing: " + path.string());
+    }
+    if (!content.empty()) {
+        out.write(content.data(), static_cast<std::streamsize>(content.size()));
+        // cache the written content
+        content_bytes = new std::vector<uint8_t>(content.begin(), content.end());
+    }
+}
+
 File* File::saveFileAs(const std::vector<uint8_t> &contentBytes, std::filesystem::path targetPath)
 {
     std::ofstream out(targetPath, std::ios::binary);
