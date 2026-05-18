@@ -248,15 +248,19 @@ def md5_file_output():
                 pass
 
 def test_rsa():
-    """Test key generation functionality."""
-    
+    """Test key generation functionality with multiple parameter combinations."""
+
     print("=== RSA generate/encrypt/decrypt ===")
 
-    # Generate keys into a temporary directory
+    # Ensure binary is up-to-date
+    run_cmd(["make", "build"])
+
+    # 1) Generate keys into a temporary directory and use key files
+    print("Testing RSA key generation and keyfile-based encryption/decryption...")
     out_dir = tempfile.TemporaryDirectory()
     out_path = out_dir.name
     try:
-        run_cmd([CRYPTOTOOL, "rsa", "--generate-keys", "-l", "16", "-o", out_path])
+        run_cmd([CRYPTOTOOL, "rsa", "-g", "-l", "16", "-o", out_path])
 
         pub_path = os.path.join(out_path, "public_key.txt")
         priv_path = os.path.join(out_path, "private_key.txt")
@@ -270,23 +274,45 @@ def test_rsa():
         with open(priv_path, "r") as sf:
             priv = sf.read().strip()
 
-        # Encrypt a small text using the public key string
+        # 2) Encrypt/decrypt a small text using key strings (-p / -s)
+        print("Testing RSA encryption/decryption with key strings...")
         enc = run_cmd([CRYPTOTOOL, "rsa", "-e", "-t", "hello", "-p", pub]).strip()
-
-        # Expect hex blocks (space separated) or single hex value
         if not re.fullmatch(r"([0-9a-fA-F]+( [0-9a-fA-F]+)*)", enc):
             print("Encryption output not hex blocks:", file=sys.stderr)
             print(enc, file=sys.stderr)
             sys.exit(1)
-
-        # Decrypt the produced hex string using the private key string
         dec = run_cmd([CRYPTOTOOL, "rsa", "-d", "-t", enc, "-s", priv])
         if "hello" not in dec:
             print("Decryption failed or unexpected output:", file=sys.stderr)
             print(dec, file=sys.stderr)
             sys.exit(1)
 
-        # Now test file encryption/decryption using key files (-P and -S)
+        # 3) Generate keys to stdout and parse key strings
+        print("Testing RSA key generation to stdout and parsing keys...")
+        stdout_gen = run_cmd([CRYPTOTOOL, "rsa", "-g", "-l", "16"])
+        m_pub = re.search(r"Public Key:\s*(\S+)", stdout_gen)
+        m_priv = re.search(r"Private Key:\s*(\S+)", stdout_gen)
+        if not m_pub or not m_priv:
+            print("Failed to parse keys from stdout:", file=sys.stderr)
+            print(stdout_gen, file=sys.stderr)
+            sys.exit(1)
+        pub2 = m_pub.group(1)
+        priv2 = m_priv.group(1)
+
+        # Verify encryption/decryption using keys printed to stdout
+        enc2 = run_cmd([CRYPTOTOOL, "rsa", "-e", "-t", "hi", "-p", pub2]).strip()
+        if not re.fullmatch(r"([0-9a-fA-F]+( [0-9a-fA-F]+)*)", enc2):
+            print("Encryption output not hex blocks (stdout keys):", file=sys.stderr)
+            print(enc2, file=sys.stderr)
+            sys.exit(1)
+        dec2 = run_cmd([CRYPTOTOOL, "rsa", "-d", "-t", enc2, "-s", priv2])
+        if "hi" not in dec2:
+            print("Decryption (stdout keys) failed:", file=sys.stderr)
+            print(dec2, file=sys.stderr)
+            sys.exit(1)
+
+        # 4) File encryption/decryption using key files (-P / -S)
+        print("Testing RSA file encryption/decryption with key files...")
         in_f = tempfile.NamedTemporaryFile(delete=False)
         in_path = in_f.name
         in_f.write(b"hello file")
@@ -314,6 +340,53 @@ def test_rsa():
                     os.remove(p)
                 except Exception:
                     pass
+
+        # 5) File encryption with key string (-p) and decryption with key string (-s)
+        in_f2 = tempfile.NamedTemporaryFile(delete=False)
+        in_path2 = in_f2.name
+        in_f2.write(b"hello file 2")
+        in_f2.close()
+
+        enc_f2 = tempfile.NamedTemporaryFile(delete=False)
+        enc_path2 = enc_f2.name
+        enc_f2.close()
+
+        dec_f2 = tempfile.NamedTemporaryFile(delete=False)
+        dec_path2 = dec_f2.name
+        dec_f2.close()
+
+        try:
+            run_cmd([CRYPTOTOOL, "rsa", "-e", "-f", in_path2, "-p", pub, "-o", enc_path2])
+            run_cmd([CRYPTOTOOL, "rsa", "-d", "-f", enc_path2, "-s", priv, "-o", dec_path2])
+            with open(in_path2, "rb") as a, open(dec_path2, "rb") as b:
+                if a.read() != b.read():
+                    print("File roundtrip (string keys) mismatch", file=sys.stderr)
+                    sys.exit(1)
+        finally:
+            for p in (in_path2, enc_path2, dec_path2):
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
+
+        # 6) Negative tests: missing keys should return error
+        try:
+            run_cmd([CRYPTOTOOL, "rsa", "-e", "-t", "no-key"])
+            print("Expected failure when no public key provided", file=sys.stderr)
+            sys.exit(1)
+        except RuntimeError as e:
+            if "You must provide a public key" not in str(e):
+                print("Unexpected error for missing public key:", e, file=sys.stderr)
+                sys.exit(1)
+
+        try:
+            run_cmd([CRYPTOTOOL, "rsa", "-d", "-t", "no-key"])
+            print("Expected failure when no private key provided", file=sys.stderr)
+            sys.exit(1)
+        except RuntimeError as e:
+            if "You must provide a private key" not in str(e):
+                print("Unexpected error for missing private key:", e, file=sys.stderr)
+                sys.exit(1)
 
         print("RSA CLI OK")
     finally:
