@@ -1,7 +1,5 @@
 #include "rsa-small.h"
 
-static const bool verbose = true;
-
 keyPair RSA::generate_keys(uint8_t bit_length)
 {
 

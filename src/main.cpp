@@ -56,6 +56,7 @@ int main(int argc, char* argv[]) {
     // This means if user provides --file, they cannot provide --text, and vice versa
     file_opt->excludes(text_opt);
     text_opt->excludes(file_opt);
+    input_group->require_option(); // Require that at least one of the options in the group is provided
     
     // Add optional output file path (no validation needed - file doesn't need to exist beforehand)
     std::filesystem::path outputFilePath;
@@ -131,7 +132,7 @@ int main(int argc, char* argv[]) {
     enc_flag->excludes(dec_flag);
     dec_flag->excludes(enc_flag);
 
-    auto* blowfish_key_group = blowfish_app->add_option_group("key", "Blowfish key input (choose one)");
+    auto* blowfish_key_group = blowfish_app->add_option_group("key", "Blowfish key input method");
     std::string blowfish_key;
     std::filesystem::path blowfish_key_path;
     auto* blowfish_key_option = blowfish_key_group->add_option("-k,--key", blowfish_key, "Blowfish key as a string")->expected(1);
@@ -139,19 +140,21 @@ int main(int argc, char* argv[]) {
 
     blowfish_key_option->excludes(blowfish_key_file_option);
     blowfish_key_file_option->excludes(blowfish_key_option);
+    blowfish_key_group->require_option();
 
-    auto* blowfish_input_group = blowfish_app->add_option_group("input", "Input source for Blowfish (choose one)");
+    auto* blowfish_input_group = blowfish_app->add_option_group("input", "Input data source");
     std::string blowfish_input_text;
     std::filesystem::path blowfish_input_file;
-    auto* blowfish_text_option = blowfish_input_group->add_option("-t,--text", blowfish_input_text, "Input text string for encryption/decryption");
-    auto* blowfish_file_option = blowfish_input_group->add_option("-f,--file", blowfish_input_file, "Input file path for encryption/decryption")->check(CLI::ExistingFile);
+    auto* blowfish_input_text_option = blowfish_input_group->add_option("-t,--text", blowfish_input_text, "Input text string for encryption/decryption");
+    auto* blowfish_input_file_option = blowfish_input_group->add_option("-f,--file", blowfish_input_file, "Input file path for encryption/decryption")->check(CLI::ExistingFile);
 
-    blowfish_text_option->excludes(blowfish_file_option);
-    blowfish_file_option->excludes(blowfish_text_option);
+    blowfish_input_text_option->excludes(blowfish_input_file_option);
+    blowfish_input_file_option->excludes(blowfish_input_text_option);
+    blowfish_input_group->require_option();
 
 
     std::filesystem::path blowfish_output_file_path;
-    blowfish_app->add_option("-o,--output", blowfish_output_file_path, "Output file path for encrypted/decrypted result (optional, prints to stdout if not provided)")->expected(0, 1);
+    blowfish_app->add_option("-o,--output", blowfish_output_file_path, "Output file path for encrypted/decrypted result (optional, prints to stdout if not provided)")->expected(0, 1)->required(false);
 
     blowfish_app->callback([&blowfish_mode, &blowfish_input_text, &blowfish_input_file, &blowfish_output_file_path, &blowfish_key, &blowfish_key_path, verbose]() {
 
@@ -160,9 +163,6 @@ int main(int argc, char* argv[]) {
         }
 
         // Setup key
-        if (!blowfish_key.empty() && !blowfish_key_path.empty()) {
-            throw CLI::ValidationError("blowfish", "You must provide either --key or --key-file, not both");
-        }
         else if (blowfish_key.empty() && blowfish_key_path.empty()) {
             throw CLI::ValidationError("blowfish", "You must provide a key using either --key or --key-file");
         }
@@ -246,6 +246,7 @@ int main(int argc, char* argv[]) {
             }
 
         }
+        
         else if (blowfish_mode == CipherMode::DECRYPT) {
 
             if (verbose)
@@ -368,6 +369,9 @@ int main(int argc, char* argv[]) {
 
     rsa_app->callback([&rsa_mode, &rsa_key_length_option, &rsa_input_text, &rsa_input_file, &rsa_public_key, &rsa_private_key, &rsa_public_key_file, &rsa_private_key_file, &rsa_output_file_path, &key_length, &verbose]() {
         
+        if (verbose)
+            RSA::verbose = true;
+
         if (rsa_mode == CipherMode::GENERATE_KEYS) {
             if (verbose)
                 std::cout << "Generating RSA key pair with key length: " << key_length << " bits" << std::endl;
@@ -426,8 +430,6 @@ int main(int argc, char* argv[]) {
             }
             
         }
-
-        // TODO: decrypt and encrypt
 
         else if (rsa_mode == CipherMode::ENCRYPT)
         {

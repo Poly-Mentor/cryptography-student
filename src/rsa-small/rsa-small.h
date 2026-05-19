@@ -44,8 +44,10 @@ public:
      */
     static std::string decryptText(const std::vector<uint64_t>& ciphertext, const key& privateKey);
 
-    static std::string keyToString(const key& keys); // TODO
-    static key stringToKey(const std::string& keysStr); // TODO
+    static std::string keyToString(const key& keys);
+    static key stringToKey(const std::string& keysStr);
+
+    static inline bool verbose = false;
 
 private:
     /**
