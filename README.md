@@ -289,3 +289,5 @@ Generative AI was **not** used for:
 - The Blowfish implementation is based on the original algorithm description by Bruce Schneier. It does not directly copy any specific codebase.
 
 - crypto_bf_bf_pi.h is a header file containing the initialization of Blowfish's P-array and S-boxes, which are derived from the hexadecimal digits of pi. This file comes from [OpenSSL](https://github.com/openssl/openssl) project. License of this repository was adopted to match OpenSSL's license (Apache License 2.0) to allow inclusion of this file.
+
+- [CLI11](https://github.com/CLIUtils/CLI11) was used to create Command Line Interface
