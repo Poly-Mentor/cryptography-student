@@ -1,11 +1,11 @@
 build: build_blowfish build_rsa_small build_rsa_small build_md5 build_utils
-	g++ src/main.cpp bin/blowfish.o bin/arithmetics.o bin/rng.o bin/md5.o bin/utils.o -o bin/app
+	g++ src/main.cpp bin/blowfish.o bin/arithmetics.o bin/rng.o bin/rsa-small.o bin/md5.o bin/utils.o -o bin/cryptotool
 
 run: build
-	./bin/app
+	./bin/cryptotool
 
 build_blowfish:
-	g++ -c src/blowfish/blowfish.cpp -o bin/blowfish.o
+	g++ -c src/blowfish/blowfish.cpp -o bin/blowfish.o -Wno-narrowing
 
 build_rsa_small:
 	g++ -c src/rsa-small/arithmetics.cpp -o bin/arithmetics.o
@@ -53,7 +53,13 @@ build_tests: build_blowfish_test build_rsa_small_tests build_md5_test build_util
 	
 
 run_tests: build_tests
-	./bin/test_*
+	./bin/test_arithmetics
+	./bin/test_rng
+	./bin/test_rsa-small
+	./bin/test_blowfish
+	./bin/test_md5
+	./bin/test_utils
+	python tests/utils/test_cli.py
 
 clean:
 	rm -rf bin/*

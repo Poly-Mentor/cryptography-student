@@ -1,7 +1,5 @@
 #include "rsa-small.h"
 
-static const bool verbose = true;
-
 keyPair RSA::generate_keys(uint8_t bit_length)
 {
 
@@ -116,6 +114,34 @@ std::string RSA::decryptText(const std::vector<uint64_t> &ciphertext, const key 
     }
     
     return plaintext;
+}
+
+std::string RSA::keyToString(const key &keys)
+{
+    std::string keyStr = std::to_string(keys.exponent) + "," + std::to_string(keys.modulus);
+    return keyStr;
+}
+
+key RSA::stringToKey(const std::string &keysStr)
+{
+    key result;
+    size_t commaPos = keysStr.find(',');
+    if (commaPos == std::string::npos) {
+        throw std::invalid_argument("Invalid key string format, expected 'exponent,modulus'");
+    }
+
+    std::string exponent_str, modulus_str;
+
+    exponent_str = keysStr.substr(0, commaPos);
+    modulus_str = keysStr.substr(commaPos + 1);
+
+    try {
+        result.exponent = std::stoull(exponent_str);
+        result.modulus = std::stoull(modulus_str);
+    } catch (const std::exception &e) {
+        throw std::invalid_argument(std::string("Error parsing key string: ") + e.what());
+    }
+    return result;
 }
 
 uint64_t RSA::generate_prime(uint8_t bit_length)

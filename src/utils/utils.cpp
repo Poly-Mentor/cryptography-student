@@ -2,27 +2,29 @@
 
 
 File::File(std::filesystem::path path)
+    : input_path(path), content_bytes(nullptr)
 {
     if (!std::filesystem::exists(path)) {
-        throw std::runtime_error("File does not exist: " + path.string());
+        
+        // If file doesn't exist, create an empty file at the path
+        std::ofstream out(path);
+        if (!out) {
+            throw std::runtime_error("Could not create file: " + path.string());
+        }
     }
-
-    if (!std::filesystem::is_regular_file(path)) {
+    else if (!std::filesystem::is_regular_file(path)) {
         throw std::runtime_error("Path is not a regular file: " + path.string());
     }
-    
-    input_path = path;
-
 }
 
-std::vector<uint8_t> *File::getContentBytes()
+const std::vector<uint8_t>& File::getContentBytes()
 {
-
-    if (content_bytes == nullptr and !input_path.empty()) {
+    // Lazy-load file content on first access and cache it
+    if (content_bytes == nullptr && !input_path.empty()) {
         content_bytes = File::readFileToBytes(input_path);
     }
 
-    return new std::vector<uint8_t>(*content_bytes);
+    return *content_bytes;
 }
 
 std::vector<uint8_t> *File::readFileToBytes(const std::filesystem::path &path)
@@ -58,6 +60,21 @@ File::File(std::filesystem::path path, std::vector<uint8_t> contentBytes)
     }
     if (!contentBytes.empty()) {
         out.write(reinterpret_cast<const char*>(contentBytes.data()), static_cast<std::streamsize>(contentBytes.size()));
+    }
+}
+
+File::File(std::filesystem::path path, std::string content)
+    : input_path(path), content_bytes(nullptr)
+{
+    // write string content to the path
+    std::ofstream out(path, std::ios::binary);
+    if (!out) {
+        throw std::runtime_error("Could not open file for writing: " + path.string());
+    }
+    if (!content.empty()) {
+        out.write(content.data(), static_cast<std::streamsize>(content.size()));
+        // cache the written content
+        content_bytes = new std::vector<uint8_t>(content.begin(), content.end());
     }
 }
 

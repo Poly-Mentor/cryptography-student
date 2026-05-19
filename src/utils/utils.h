@@ -13,17 +13,21 @@ class File
 public:
     File();
 
-    /** File constructor with path argument (content will be read) */
+    /** File constructor with path argument
+     * Content will be read if file exists, otherwise empty file will be created */
     File(std::filesystem::path path);
 
     /** File constructor with path and content (content will be written to path) */
     File(std::filesystem::path path, std::vector<uint8_t> contentBytes);
 
+        /** File constructor with path and content (content will be written to path) */
+    File(std::filesystem::path path, std::string content); // TODO
+
     /** Destructor performing cleanup */
     ~File();
 
-    /** Returns a copy of the file's content as a vector of bytes */
-    std::vector<uint8_t>* getContentBytes();
+    /** Returns a const reference to the file's content as a vector of bytes (lazy-loaded and cached) */
+    const std::vector<uint8_t>& getContentBytes();
 
     /** Saves a copy of the file's content to a new path 
      * @return a pointer to the new File object */
