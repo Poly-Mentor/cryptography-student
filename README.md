@@ -11,44 +11,85 @@ The project includes a simple command-line interface (CLI) tool that allows user
 There is a possibility to use standard input and output for text and file content, which allows for flexible usage in various scenarios, such as piping data between commands or redirecting output to files.
 
 ```bash
-./bin/cryptotool
-Usage: cryptotool ALGORITHM [ARGS]...
+./bin/cryptotool --help
+Cryptography Student Tool - implementations of Blowfish, RSA, and MD5 for
+educational purposes with a simple CLI interface.
 
-ALGORITHM:
-  blowfish    Blowfish encryption and decryption
-  rsa         RSA encryption and decryption (small educational version)
-  md5         MD5 hashing
 
-ARGS:
-  For blowfish:
-	-e    --encrypt       encryption mode
-	-d    --decrypt       decryption mode
-	-t    --text  TEXT    input text string
-	-f    --file  FILE    input file path
-	-o    --output FILE   output file path (optional, if not specified, output will be printed to stdout)
-	-k    --key    KEY    key string for encryption/decryption
-	-K   --key-file FILE text file containing key string for encryption/decryption 
+./bin/cryptotool [OPTIONS] [SUBCOMMANDS]
 
-  For rsa:
-	-l  --key-length N       key length in bits (only values from 9 to 48 bits are supported for educational purposes, not secure)
 
-	-e  --encrypt        	encryption mode
-	-d  --decrypt        	decryption mode
-	-g  --generate-keys     generate RSA key pair
+OPTIONS:
+  -h,     --help              Print this help message and exit
+  -v,     --verbose           Enable verbose output for debugging
 
-	-t  --text   TEXT    	input text string
-	-f  --file   FILE    	input file path
-	-o  --output FILE    	output file path (optional, if not specified, output will be printed to stdout)
-	-p --public-key-string KEY  public key string for encryption
-	-s --private-key-string KEY private key string for decryption
-	-P --public-key FILE  text file path containing public key for encryption
-	-S --private-key FILE 	text file path containing private key for decryption
+SUBCOMMANDS:
+  blowfish                    Blowfish encryption and decryption
+  rsa                         RSA encryption and decryption
+  md5                         MD5 hashing
 
-  For md5:
-	-f --file   FILE    	input file path
-	-t --text   TEXT    	input text string
-	-o --output FILE    	output file path (optional, if not specified, output will be printed to stdout)
+./bin/cryptotool blowfish --help
+Blowfish encryption and decryption
 
+
+./bin/cryptotool blowfish [OPTIONS]
+
+
+OPTIONS:
+  -h,     --help              Print this help message and exit
+  -o,     --output TEXT       Output file path for encrypted/decrypted result (optional, prints
+                              to stdout if not provided)
+[Option Group: mode]
+  Blowfish operation mode (encrypt or decrypt)
+  
+  
+OPTIONS:
+  -e,     --encrypt Excludes: --decrypt 
+                              Encrypt mode
+  -d,     --decrypt Excludes: --encrypt 
+                              Decrypt mode
+[Option Group: key]
+  Blowfish key input method
+  [At least 1 of the following options are required]
+  
+  
+OPTIONS:
+  -k,     --key TEXT Excludes: --key-file 
+                              Blowfish key as a string
+  -K,     --key-file TEXT:FILE Excludes: --key 
+                              Path to file containing Blowfish key
+[Option Group: input]
+  Input data source
+  [At least 1 of the following options are required]
+  
+  
+OPTIONS:
+  -t,     --text TEXT Excludes: --file 
+                              Input text string for encryption/decryption
+  -f,     --file TEXT:FILE Excludes: --text 
+                              Input file path for encryption/decryption
+
+./bin/cryptotool md5 --help
+MD5 hashing
+
+
+./bin/cryptotool md5 [OPTIONS]
+
+
+OPTIONS:
+  -h,     --help              Print this help message and exit
+  -o,     --output TEXT       Output file for hash result (optional, prints to stdout if not
+                              provided)
+[Option Group: input]
+  Input source (choose one)
+  [At least 1 of the following options are required]
+  
+  
+OPTIONS:
+  -f,     --file TEXT:FILE Excludes: --text 
+                              Input file path for hashing
+  -t,     --text TEXT Excludes: --file 
+                              Input string to hash
 ```
 
 ### Examples
@@ -157,7 +198,7 @@ Compute MD5 hash of a file
 # Compute MD5 hash of image.png and output to a file
 ./bin/cryptotool md5 --file image.png --output image_md5.txt
 # or
-.bin/cryptotool md5 -f image.png > image_md5.txt
+./bin/cryptotool md5 -f image.png > image_md5.txt
 ```
 
 

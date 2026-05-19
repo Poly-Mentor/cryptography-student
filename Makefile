@@ -5,7 +5,7 @@ run: build
 	./bin/cryptotool
 
 build_blowfish:
-	g++ -c src/blowfish/blowfish.cpp -o bin/blowfish.o
+	g++ -c src/blowfish/blowfish.cpp -o bin/blowfish.o -Wno-narrowing
 
 build_rsa_small:
 	g++ -c src/rsa-small/arithmetics.cpp -o bin/arithmetics.o
