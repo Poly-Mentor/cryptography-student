@@ -5,7 +5,7 @@ run: build
 	./bin/cryptotool
 
 build_wasm:
-	emcc src/wasm_wrapper.cpp src/blowfish/blowfish.cpp src/rsa-small/arithmetics.cpp src/rsa-small/rng.cpp src/rsa-small/rsa-small.cpp src/md5/md5.cpp src/utils/utils.cpp -o bin/cryptotool.js -std=c++17 -O3 --bind -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -Wno-narrowing -I./src
+	emcc src/wasm_wrapper.cpp src/blowfish/blowfish.cpp src/rsa-small/arithmetics.cpp src/rsa-small/rng.cpp src/rsa-small/rsa-small.cpp src/md5/md5.cpp src/utils/utils.cpp -o html-demo/cryptotool.js -std=c++17 -O3 --bind -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -Wno-narrowing -I./src
 
 build_blowfish:
 	g++ -c src/blowfish/blowfish.cpp -o bin/blowfish.o -Wno-narrowing

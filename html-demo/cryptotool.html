@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptography Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-copy {
+            flex: 0.5;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .result-content {
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            border-left-color: #f44;
+            color: #c33;
+        }
+
+        .success {
+            background: #efe;
+            border-left-color: #4a4;
+            color: #3a3;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #1565c0;
+            font-size: 0.9em;
+        }
+
+        .input-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .input-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-toggle label {
+            margin-bottom: 0;
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-info {
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Cryptography Tool</h1>
+            <p>Educational implementations of Blowfish and MD5</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="md5">MD5 Hash</button>
+            <button class="tab-btn" data-tab="blowfish">Blowfish Cipher</button>
+            <button class="tab-btn" data-tab="rsa">RSA Encryption</button>
+        </div>
+
+        <!-- MD5 Tab -->
+        <div id="md5" class="tab-content active">
+            <div class="card">
+                <div class="info">
+                    <strong>MD5:</strong> Computes a 128-bit hash value for any input text. Note: MD5 is cryptographically broken and should not be used for further cryptographic purposes.
+                </div>
+
+                <div class="input-options">
+                    <div class="input-toggle">
+                        <label>
+                            <input type="radio" name="md5-input-type" value="text" checked onchange="toggleInputType('md5', 'text')"> Text
+                        </label>
+                        <label>
+                            <input type="radio" name="md5-input-type" value="file" onchange="toggleInputType('md5', 'file')"> File
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="md5-text-input">
+                    <label for="md5-input">Text to Hash</label>
+                    <textarea id="md5-input" placeholder="Enter text to hash..."></textarea>
+                </div>
+
+                <div class="form-group" id="md5-file-input" style="display: none;">
+                    <label for="md5-file">Upload File to Hash</label>
+                    <input type="file" id="md5-file" onchange="handleFileSelect('md5')">
+                    <div class="file-info" id="md5-file-info"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="computeMD5()">Compute Hash</button>
+                    <button class="btn-secondary btn-copy" onclick="clearMD5()">Clear</button>
+                </div>
+
+                <div class="loading" id="md5-loading">
+                    <div class="spinner"></div>
+                    <p>Computing hash...</p>
+                </div>
+
+                <div class="status-message" id="md5-status"></div>
+
+                <div class="result" id="md5-result">
+                    <div class="result-title">MD5 Hash</div>
+                    <div class="result-content" id="md5-output"></div>
+                    <button class="btn-secondary btn-copy" onclick="copyToClipboard('md5-output')">📋 Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blowfish Tab -->
+        <div id="blowfish" class="tab-content">
+            <div class="card">
+                <div class="info">
+                    <strong>Blowfish:</strong> A 64-bit block cipher with variable key length. This is an educational implementation and should not be used in production.
+                </div>
+
+                <div class="form-group">
+                    <label for="bf-key">Encryption Key</label>
+                    <input type="password" id="bf-key" placeholder="Enter a key (4-56 bytes)...">
+                </div>
+
+                <div class="form-group">
+                    <label for="bf-mode">Mode</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="radio" name="bf-mode" value="encrypt" checked> Encrypt
+                        </label>
+                        <label style="display: flex; align-items: center; font-weight: normal;">
+                            <input type="radio" name="bf-mode" value="decrypt"> Decrypt
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-options">
+                    <div class="input-toggle">
+                        <label>
+                            <input type="radio" name="bf-input-type" value="text" checked onchange="toggleInputType('bf', 'text')"> Text
+                        </label>
+                        <label>
+                            <input type="radio" name="bf-input-type" value="file" onchange="toggleInputType('bf', 'file')"> File
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="bf-text-input">
+                    <label for="bf-input">Input Text</label>
+                    <textarea id="bf-input" placeholder="Enter text to encrypt/decrypt..."></textarea>
+                </div>
+
+                <div class="form-group" id="bf-file-input" style="display: none;">
+                    <label for="bf-file">Upload File to Process</label>
+                    <input type="file" id="bf-file" onchange="handleFileSelect('bf')">
+                    <div class="file-info" id="bf-file-info"></div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="processBlowfish()">Process</button>
+                    <button class="btn-secondary btn-copy" onclick="clearBlowfish()">Clear</button>
+                </div>
+
+                <div class="loading" id="bf-loading">
+                    <div class="spinner"></div>
+                    <p>Processing...</p>
+                </div>
+
+                <div class="status-message" id="bf-status"></div>
+
+                <div class="result" id="bf-result">
+                    <div class="result-title">Result</div>
+                    <div class="result-content" id="bf-output"></div>
+                    <button class="btn-secondary btn-copy" onclick="copyToClipboard('bf-output')">📋 Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RSA Tab -->
+        <div id="rsa" class="tab-content">
+            <div class="card">
+                <div class="info">
+                    <strong>RSA:</strong> Asymmetric encryption with public-key cryptography. This is an educational implementation using small key sizes and should NOT be used for real security.
+                </div>
+
+                <div class="form-group">
+                    <label>Key Size (bits)</label>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <select id="rsa-keysize" style="padding: 8px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                            <option value="16">16-bit (very weak)</option>
+                            <option value="32" selected>32-bit (for demo only)</option>
+                            <option value="48">48-bit (weak but max supported)</option>
+                        </select>
+                        <button class="btn-primary" onclick="generateRSAKeys()" style="flex: 0.6;">Generate Keys</button>
+                    </div>
+                </div>
+
+                <div class="loading" id="rsa-keygen-loading">
+                    <div class="spinner"></div>
+                    <p>Generating keys...</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; display: none;" id="rsa-keys-container">
+                    <div>
+                        <label style="font-weight: 600; color: #28a745;">Public Key</label>
+                        <textarea id="rsa-public-key" readonly style="height: 80px; background: #f0f0f0; cursor: copy;" placeholder="Public key will appear here..."></textarea>
+                        <button class="btn-secondary btn-copy" onclick="copyToClipboard('rsa-public-key')" style="width: 100%; margin-top: 8px;">📋 Copy Public Key</button>
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #dc3545;">Private Key</label>
+                        <textarea id="rsa-private-key" readonly style="height: 80px; background: #f0f0f0; cursor: copy;" placeholder="Private key will appear here..."></textarea>
+                        <button class="btn-secondary btn-copy" onclick="copyToClipboard('rsa-private-key')" style="width: 100%; margin-top: 8px;">📋 Copy Private Key</button>
+                    </div>
+                </div>
+
+                <div style="border-top: 2px solid #e0e0e0; margin: 25px 0; padding-top: 25px;">
+                    <div class="form-group">
+                        <label for="rsa-mode">Operation</label>
+                        <div style="display: flex; gap: 20px;">
+                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                <input type="radio" name="rsa-mode" value="encrypt" checked> Encrypt (use Public Key)
+                            </label>
+                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                <input type="radio" name="rsa-mode" value="decrypt"> Decrypt (use Private Key)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rsa-key">Key (paste public or private key)</label>
+                        <textarea id="rsa-key" placeholder="Paste your key here (e.g., 65537,3233)..."></textarea>
+                    </div>
+
+                    <div class="input-options">
+                        <div class="input-toggle">
+                            <label>
+                                <input type="radio" name="rsa-input-type" value="text" checked onchange="toggleInputType('rsa', 'text')"> Text
+                            </label>
+                            <label>
+                                <input type="radio" name="rsa-input-type" value="file" onchange="toggleInputType('rsa', 'file')"> File
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="rsa-text-input">
+                        <label for="rsa-input">Text or Ciphertext</label>
+                        <textarea id="rsa-input" placeholder="Enter text to encrypt or comma-separated numbers to decrypt..."></textarea>
+                    </div>
+
+                    <div class="form-group" id="rsa-file-input" style="display: none;">
+                        <label for="rsa-file">Upload File to Process</label>
+                        <input type="file" id="rsa-file" onchange="handleFileSelect('rsa')">
+                        <div class="file-info" id="rsa-file-info"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="processRSA()">Process</button>
+                        <button class="btn-secondary btn-copy" onclick="clearRSA()">Clear</button>
+                    </div>
+
+                    <div class="loading" id="rsa-loading">
+                        <div class="spinner"></div>
+                        <p>Processing...</p>
+                    </div>
+
+                    <div class="status-message" id="rsa-status"></div>
+
+                    <div class="result" id="rsa-result">
+                        <div class="result-title">Result</div>
+                        <div class="result-content" id="rsa-output"></div>
+                        <button class="btn-secondary btn-copy" onclick="copyToClipboard('rsa-output')">📋 Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emscripten script -->
+    <script async src="cryptotool.js"></script>
+    <script>
+        // File handling state for each tab
+        const fileInputState = {
+            md5: { file: null, content: null },
+            bf: { file: null, content: null },
+            rsa: { file: null, content: null }
+        };
+
+        // Toggle between text and file input
+        function toggleInputType(tabName, inputType) {
+            const textInput = document.getElementById(`${tabName}-text-input`);
+            const fileInput = document.getElementById(`${tabName}-file-input`);
+            const fileInfo = document.getElementById(`${tabName}-file-info`);
+            
+            if (inputType === 'text') {
+                textInput.style.display = 'block';
+                fileInput.style.display = 'none';
+                fileInfo.classList.remove('show');
+            } else {
+                textInput.style.display = 'none';
+                fileInput.style.display = 'block';
+            }
+        }
+
+        // Handle file selection
+        function handleFileSelect(tabName) {
+            const fileInput = document.getElementById(`${tabName}-file`);
+            const fileInfo = document.getElementById(`${tabName}-file-info`);
+            const file = fileInput.files[0];
+
+            if (!file) {
+                fileInfo.classList.remove('show');
+                return;
+            }
+
+            // Show file info
+            fileInfo.innerHTML = `<strong>File:</strong> ${file.name} (${formatFileSize(file.size)})`;
+            fileInfo.classList.add('show');
+
+            // Read file
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    fileInputState[tabName].content = e.target.result;
+                } catch (error) {
+                    showStatus(`${tabName}-status`, 'Error reading file: ' + error.message, 'error');
+                }
+            };
+            reader.onerror = () => {
+                showStatus(`${tabName}-status`, 'Error reading file', 'error');
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Format file size for display
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Get input content (from text or file)
+        function getInputContent(tabName) {
+            const inputType = document.querySelector(`input[name="${tabName}-input-type"]:checked`).value;
+            
+            if (inputType === 'file') {
+                if (!fileInputState[tabName].content) {
+                    throw new Error('File not loaded yet. Please select a file and wait for it to load.');
+                }
+                return fileInputState[tabName].content;
+            } else {
+                return document.getElementById(`${tabName}-input`).value;
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName).classList.add('active');
+            });
+        });
+
+        // MD5 Functions
+        function computeMD5() {
+            let input;
+            try {
+                input = getInputContent('md5');
+            } catch (error) {
+                showStatus('md5-status', error.message, 'error');
+                return;
+            }
+
+            if (!input) {
+                showStatus('md5-status', 'Please enter text or select a file to hash', 'error');
+                return;
+            }
+
+            const loading = document.getElementById('md5-loading');
+            const status = document.getElementById('md5-status');
+            const result = document.getElementById('md5-result');
+            const output = document.getElementById('md5-output');
+
+            loading.classList.add('show');
+            result.classList.remove('show');
+            status.classList.remove('show');
+
+            try {
+                // Simulate async behavior
+                setTimeout(() => {
+                    try {
+                        const hash = Module.md5Hash(input);
+                        output.textContent = hash;
+                        result.classList.add('show');
+                        loading.classList.remove('show');
+                        showStatus('md5-status', 'Hash computed successfully', 'success');
+                    } catch (error) {
+                        loading.classList.remove('show');
+                        showStatus('md5-status', 'Error: ' + error.message, 'error');
+                    }
+                }, 100);
+            } catch (error) {
+                loading.classList.remove('show');
+                showStatus('md5-status', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        function clearMD5() {
+            document.getElementById('md5-input').value = '';
+            document.getElementById('md5-file').value = '';
+            document.getElementById('md5-file-info').classList.remove('show');
+            document.getElementById('md5-result').classList.remove('show');
+            document.getElementById('md5-status').classList.remove('show');
+            fileInputState.md5 = { file: null, content: null };
+        }
+
+        // Blowfish Functions
+        function processBlowfish() {
+            const key = document.getElementById('bf-key').value;
+            let input;
+            try {
+                input = getInputContent('bf');
+            } catch (error) {
+                showStatus('bf-status', error.message, 'error');
+                return;
+            }
+            const mode = document.querySelector('input[name="bf-mode"]:checked').value;
+
+            if (!key) {
+                showStatus('bf-status', 'Please enter an encryption key', 'error');
+                return;
+            }
+            if (!input) {
+                showStatus('bf-status', 'Please enter text or select a file to process', 'error');
+                return;
+            }
+
+            const loading = document.getElementById('bf-loading');
+            const status = document.getElementById('bf-status');
+            const result = document.getElementById('bf-result');
+            const output = document.getElementById('bf-output');
+
+            loading.classList.add('show');
+            result.classList.remove('show');
+            status.classList.remove('show');
+
+            try {
+                // Simulate async behavior
+                setTimeout(() => {
+                    try {
+                        const bf = new Module.Blowfish(key);
+                        let processedText;
+
+                        if (mode === 'encrypt') {
+                            processedText = bf.encrypt(input);
+                        } else {
+                            processedText = bf.decrypt(input);
+                        }
+
+                        output.textContent = processedText;
+                        result.classList.add('show');
+                        loading.classList.remove('show');
+                        showStatus('bf-status', 'Processing completed successfully', 'success');
+                    } catch (error) {
+                        loading.classList.remove('show');
+                        showStatus('bf-status', 'Error: ' + error.message, 'error');
+                    }
+                }, 100);
+            } catch (error) {
+                loading.classList.remove('show');
+                showStatus('bf-status', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        function clearBlowfish() {
+            document.getElementById('bf-key').value = '';
+            document.getElementById('bf-input').value = '';
+            document.getElementById('bf-file').value = '';
+            document.getElementById('bf-file-info').classList.remove('show');
+            document.getElementById('bf-result').classList.remove('show');
+            document.getElementById('bf-status').classList.remove('show');
+            fileInputState.bf = { file: null, content: null };
+        }
+
+        // Utility Functions
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'status-message show ' + type;
+        }
+
+        function copyToClipboard(elementId) {
+            const content = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                showStatus('md5-status', 'Copied to clipboard!', 'success');
+            }).catch(() => {
+                showStatus('md5-status', 'Failed to copy', 'error');
+            });
+        }
+
+        // RSA Functions
+        function generateRSAKeys() {
+            const keySize = parseInt(document.getElementById('rsa-keysize').value);
+            const loading = document.getElementById('rsa-keygen-loading');
+            const container = document.getElementById('rsa-keys-container');
+            
+            loading.style.display = 'block';
+            container.style.display = 'none';
+
+            try {
+                setTimeout(() => {
+                    try {
+                        const keyPairStr = Module.RSA.generateKeys(keySize);
+                        const [pubStr, privStr] = keyPairStr.split('|');
+                        
+                        document.getElementById('rsa-public-key').value = pubStr;
+                        document.getElementById('rsa-private-key').value = privStr;
+                        
+                        loading.style.display = 'none';
+                        container.style.display = 'grid';
+                        showStatus('rsa-status', 'Keys generated successfully!', 'success');
+                    } catch (error) {
+                        loading.style.display = 'none';
+                        showStatus('rsa-status', 'Error: ' + error.message, 'error');
+                    }
+                }, 100);
+            } catch (error) {
+                loading.style.display = 'none';
+                showStatus('rsa-status', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        function processRSA() {
+            const key = document.getElementById('rsa-key').value;
+            let input;
+            try {
+                input = getInputContent('rsa');
+            } catch (error) {
+                showStatus('rsa-status', error.message, 'error');
+                return;
+            }
+            const mode = document.querySelector('input[name="rsa-mode"]:checked').value;
+
+            if (!key) {
+                showStatus('rsa-status', 'Please enter a key', 'error');
+                return;
+            }
+            if (!input) {
+                showStatus('rsa-status', 'Please enter text or select a file', 'error');
+                return;
+            }
+
+            const loading = document.getElementById('rsa-loading');
+            const status = document.getElementById('rsa-status');
+            const result = document.getElementById('rsa-result');
+            const output = document.getElementById('rsa-output');
+
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            status.style.display = 'none';
+
+            try {
+                setTimeout(() => {
+                    try {
+                        let resultText;
+
+                        if (mode === 'encrypt') {
+                            resultText = Module.RSA.encrypt(input, key);
+                        } else {
+                            resultText = Module.RSA.decrypt(input, key);
+                        }
+
+                        output.textContent = resultText;
+                        result.style.display = 'block';
+                        loading.style.display = 'none';
+                        showStatus('rsa-status', 'Processing completed successfully', 'success');
+                    } catch (error) {
+                        loading.style.display = 'none';
+                        showStatus('rsa-status', 'Error: ' + error.message, 'error');
+                    }
+                }, 100);
+            } catch (error) {
+                loading.style.display = 'none';
+                showStatus('rsa-status', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        function clearRSA() {
+            document.getElementById('rsa-key').value = '';
+            document.getElementById('rsa-input').value = '';
+            document.getElementById('rsa-file').value = '';
+            document.getElementById('rsa-file-info').classList.remove('show');
+            document.getElementById('rsa-result').style.display = 'none';
+            document.getElementById('rsa-status').style.display = 'none';
+            fileInputState.rsa = { file: null, content: null };
+        }
+
+        // Wait for Module to be ready
+        window.addEventListener('load', () => {
+            if (typeof Module !== 'undefined') {
+                console.log('Cryptography module loaded successfully!');
+            }
+        });
+    </script>
+</body>
+</html>
