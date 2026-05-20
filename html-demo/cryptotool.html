@@ -330,6 +330,45 @@
         .file-info.show {
             display: block;
         }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .input-wrapper input[type="password"],
+        .input-wrapper input[type="text"],
+        .input-wrapper textarea {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .visibility-toggle {
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            color: #666;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 46px;
+        }
+
+        .visibility-toggle:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .visibility-toggle:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -403,7 +442,10 @@
 
                 <div class="form-group">
                     <label for="bf-key">Encryption Key</label>
-                    <input type="password" id="bf-key" placeholder="Enter a key (4-56 bytes)...">
+                    <div class="input-wrapper">
+                        <input type="password" id="bf-key" placeholder="Enter a key (4-56 bytes)...">
+                        <button type="button" class="visibility-toggle" onclick="toggleVisibility('bf-key')" title="Toggle key visibility">👁️</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -455,7 +497,10 @@
                 <div class="result" id="bf-result">
                     <div class="result-title">Result</div>
                     <div class="result-content" id="bf-output"></div>
-                    <button class="btn-secondary btn-copy" onclick="copyToClipboard('bf-output')">📋 Copy</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-secondary btn-copy" onclick="copyToClipboard('bf-output')">📋 Copy</button>
+                        <button class="btn-secondary btn-copy" onclick="downloadResult('bf-output', 'encrypted')">⬇️ Download</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -512,7 +557,10 @@
 
                     <div class="form-group">
                         <label for="rsa-key">Key (paste public or private key)</label>
-                        <textarea id="rsa-key" placeholder="Paste your key here (e.g., 65537,3233)..."></textarea>
+                        <div class="input-wrapper">
+                            <textarea id="rsa-key" placeholder="Paste your key here (e.g., 65537,3233)..."></textarea>
+                            <button type="button" class="visibility-toggle" onclick="toggleVisibility('rsa-key')" title="Toggle key visibility">👁️</button>
+                        </div>
                     </div>
 
                     <div class="input-options">
@@ -552,7 +600,10 @@
                     <div class="result" id="rsa-result">
                         <div class="result-title">Result</div>
                         <div class="result-content" id="rsa-output"></div>
-                        <button class="btn-secondary btn-copy" onclick="copyToClipboard('rsa-output')">📋 Copy</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-secondary btn-copy" onclick="copyToClipboard('rsa-output')">📋 Copy</button>
+                            <button class="btn-secondary btn-copy" onclick="downloadResult('rsa-output', 'encrypted')">⬇️ Download</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -784,6 +835,20 @@
             element.className = 'status-message show ' + type;
         }
 
+        // Toggle key/password visibility
+        function toggleVisibility(elementId) {
+            const element = document.getElementById(elementId);
+            const button = event.target.closest('.visibility-toggle');
+            
+            if (element.type === 'password') {
+                element.type = 'text';
+                button.textContent = '👁️‍🗨️';
+            } else {
+                element.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
         function copyToClipboard(elementId) {
             const content = document.getElementById(elementId).textContent;
             navigator.clipboard.writeText(content).then(() => {
@@ -791,6 +856,33 @@
             }).catch(() => {
                 showStatus('md5-status', 'Failed to copy', 'error');
             });
+        }
+
+        // Download result file
+        function downloadResult(elementId, fileType) {
+            const content = document.getElementById(elementId).textContent;
+            const timestamp = new Date().toISOString().slice(0, 10);
+            
+            // Generate filename based on file type
+            let filename;
+            if (fileType === 'encrypted') {
+                filename = `encrypted_${timestamp}.txt`;
+            } else if (fileType === 'decrypted') {
+                filename = `decrypted_${timestamp}.txt`;
+            } else {
+                filename = `result_${timestamp}.txt`;
+            }
+            
+            // Create blob and download
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
 
         // RSA Functions
