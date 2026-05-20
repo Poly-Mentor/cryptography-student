@@ -114,10 +114,10 @@ uint32_t Blowfish::F(uint32_t x) {
 
     // Split the 32-bit input into four 8-bit segments
     uint8_t xarr[4] = {
-        x >> 24,
-        x >> 16,
-        x >> 8,
-        x
+        static_cast<uint8_t>(x >> 24),
+        static_cast<uint8_t>(x >> 16),
+        static_cast<uint8_t>(x >> 8),
+        static_cast<uint8_t>(x)
     };
     // Use the segments to index into the S-boxes and combine the results
     uint32_t result;
