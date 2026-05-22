@@ -202,6 +202,101 @@ Compute MD5 hash of a file
 ```
 
 
+## Web-based Demo
+
+The project includes an interactive browser-based demonstration tool built with WebAssembly (WASM). This allows you to use all three cryptographic algorithms directly in your web browser without any server-side processing.
+
+### Features
+
+- **Interactive UI**: Clean, responsive interface with tab-based navigation for each algorithm
+- **MD5 Hashing**: Compute message digests for text input or uploaded files
+- **Blowfish Encryption**: Encrypt and decrypt data with password-based keys, supporting both text and files
+- **RSA Encryption**: Generate key pairs, encrypt with public keys, and decrypt with private keys
+- **File Upload Support**: Upload files directly to be processed by any algorithm
+- **File Download**: Download encrypted/decrypted results as files for roundtrip encryption-decryption workflows
+- **Copy to Clipboard**: Easily copy results with the copy button
+- **Client-side Processing**: All cryptographic operations run in the browser using WebAssembly—no data is sent to any server
+
+### Accessing the Demo
+
+1. Build the WASM module:
+```bash
+make build_wasm
+```
+
+2. Open the demo in your browser:
+```bash
+# From the repository root, open this file in your browser
+file:///path/to/cryptography-student/html-demo/cryptotool.html
+```
+
+Alternatively, you can serve the files using a simple HTTP server:
+```bash
+cd html-demo
+python -m http.server 8000
+# Then visit http://localhost:8000/cryptotool.html
+```
+
+### Building the WASM Module
+
+The web demo requires the WebAssembly module to be built from the C++ source code using Emscripten. The build process is automated through the Makefile:
+
+```bash
+# Build the WASM module (creates cryptotool.js and cryptotool.wasm)
+make build_wasm
+```
+
+The compiled files are placed in `html-demo/` directory:
+- `cryptotool.js` - JavaScript loader for the WebAssembly module
+- `cryptotool.wasm` - WebAssembly binary containing the compiled C++ cryptographic implementations
+
+### Usage Examples in the Browser
+
+#### MD5 Hashing
+
+1. Navigate to the "MD5 Hash" tab
+2. Choose "Text" input for manual text, or "File" to upload a document
+3. Enter your text or select a file
+4. Click "Compute Hash"
+5. Copy the resulting 128-bit hash value
+
+#### Blowfish Encryption
+
+1. Go to the "Blowfish Cipher" tab
+2. Enter an encryption key (4-56 bytes)
+3. Select "Encrypt" or "Decrypt" mode
+4. Choose "Text" or "File" input
+5. Enter plaintext or ciphertext (or upload a file)
+6. Click "Process" to encrypt/decrypt
+7. Copy the result or download it as a file for roundtrip encryption-decryption workflows
+
+**Roundtrip File Encryption Workflow:**
+- Encrypt a file: Upload file → Select "Encrypt" → Click "Process" → Click "Download" to save encrypted file
+- Decrypt the file: Upload encrypted file → Select "Decrypt" → Click "Process" → Click "Download" to get original file back
+
+#### RSA Encryption
+
+1. Visit the "RSA Encryption" tab
+2. Select key size (16, 32, or 48-bit for demonstration)
+3. Click "Generate Keys" to create a public/private key pair
+4. Copy the keys for use
+5. For encryption: paste the public key, enter plaintext (or upload file), select "Encrypt", click "Process"
+6. For decryption: paste the private key, enter the comma-separated ciphertext, select "Decrypt", click "Process"
+7. Download encrypted or decrypted results using the "Download" button
+
+**Roundtrip File Encryption Workflow:**
+- Encrypt a file: Upload file → Select "Encrypt" → Enter public key → Click "Process" → Click "Download"
+- Decrypt the file: Upload encrypted file → Select "Decrypt" → Enter private key → Click "Process" → Click "Download"
+
+### Technical Details
+
+- **Framework**: WebAssembly compiled from C++ using Emscripten
+- **JavaScript Integration**: Emscripten embind bindings expose C++ classes and functions to JavaScript
+- **File Handling**: Browser File API used for reading uploaded files
+- **Compatibility**: Works in all modern browsers supporting WebAssembly
+- **Security Note**: While client-side processing is used, these are educational implementations and should not be relied upon for real cryptographic security
+
+
 # Implementation
 
 ## Blowfish
