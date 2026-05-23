@@ -375,6 +375,7 @@ Generative AI was used for:
 - General help with C++ syntax, features and best practices
 - Assistance with providing friendly, step-by-step, no-code descriptions of cryptographic algorithms to implement
 - Writing tests
+- Generating html and JavaScript code for the web-based demo, as well as providing guidance on how to integrate it with the C++ code compiled to WebAssembly
 
 Generative AI was **not** used for:
 - Writing the actual implementations of the algorithms (in /src)
